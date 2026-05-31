@@ -126,11 +126,63 @@ contextweaver index --force
 ### 本地搜索
 
 ```bash
-# 语义搜索
-cw search --information-request "用户认证流程是如何实现的？"
+# 语义搜索（推荐使用 --query，`cw` 是 `contextweaver` 的简写）
+contextweaver search --query "用户认证流程是如何实现的？"
 
-# 带精确术语
-cw search --information-request "数据库连接逻辑" --technical-terms "DatabasePool,Connection"
+# 带精确术语，增强词法召回
+contextweaver search --query "数据库连接逻辑" --technical-terms "DatabasePool,Connection"
+
+# 输出结构化 JSON（结果写到 stdout，日志写到 stderr）
+contextweaver search --query "用户认证流程是如何实现的？" --json
+
+# 搜索阶段排除 Markdown 文档结果，聚焦源码相关片段
+contextweaver search --query "用户认证流程是如何实现的？" --code-only
+
+# 兼容旧参数
+contextweaver search --information-request "用户认证流程是如何实现的？"
+```
+
+#### `search` 参数说明
+
+| 参数 | 说明 |
+|------|------|
+| `--query <text>` | 推荐入口。自然语言问题描述。 |
+| `--information-request <text>` | 旧参数名，当前仍兼容。 |
+| `--technical-terms <a,b,c>` | 逗号分隔的精确术语，用于增强词法召回。 |
+| `--json` | 输出结构化 JSON；适合脚本消费。 |
+| `--code-only` | 仅在搜索阶段排除 `markdown` 结果，不会删除索引中的文档。 |
+| `--repo-path <path>` | 指定代码库根目录，默认当前目录。 |
+| `--zen` | 使用 CLI 当前保留的 Zen 配置开关。 |
+
+#### `--json` 输出说明
+
+成功时输出字段：
+
+```json
+{
+  "version": "0.0.7",
+  "success": true,
+  "projectId": "project-id",
+  "query": "trace login flow AuthService",
+  "seeds": [],
+  "expanded": [],
+  "files": []
+}
+```
+
+缺少 Embedding / Reranker 配置时：
+
+```json
+{
+  "version": "0.0.7",
+  "success": false,
+  "query": "trace login flow AuthService",
+  "error": {
+    "name": "MissingEnvError",
+    "message": "Missing required environment variables: ...",
+    "missingVars": ["EMBEDDINGS_API_KEY", "RERANK_API_KEY"]
+  }
+}
 ```
 
 ### 启动 MCP 服务器
@@ -145,6 +197,12 @@ contextweaver mcp
 ```bash
 # 语言支持与解析器回归
 pnpm test
+
+# 搜索编排 / 过滤 / CLI 回归
+pnpm exec tsx --test tests/search-service-unit.test.ts tests/search-filtering.test.ts tests/search-cli-smoke.ts
+
+# 构建产物（含 d.ts）
+pnpm build
 
 # MCP 多语言端到端冒烟测试
 pnpm test:e2e:mcp
