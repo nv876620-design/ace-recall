@@ -147,12 +147,18 @@ cli
   .option('--repo-path <path>', '代码库根目录（默认当前目录）')
   .option('--information-request <text>', '自然语言问题描述（必填）')
   .option('--technical-terms <terms>', '精确术语（逗号分隔）')
+  .option('--source-code-only', '仅检索源码语言（排除 markdown/json/yaml 等）')
+  .option('--include-languages <langs>', '仅包含指定语言（逗号分隔）')
+  .option('--exclude-languages <langs>', '排除指定语言（逗号分隔）')
   .option('--zen', '使用 MCP Zen 配置（默认开启）')
   .action(
     async (options: {
       repoPath?: string;
       informationRequest?: string;
       technicalTerms?: string;
+      sourceCodeOnly?: boolean;
+      includeLanguages?: string;
+      excludeLanguages?: string;
       zen?: boolean;
     }) => {
       const repoPath = options.repoPath ? path.resolve(options.repoPath) : process.cwd();
@@ -166,6 +172,15 @@ cli
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
+      // CLI 与工具层统一逗号分隔协议，确保本地检索与 MCP 参数口径一致。
+      const includeLanguages = (options.includeLanguages || '')
+        .split(',')
+        .map((lang) => lang.trim())
+        .filter(Boolean);
+      const excludeLanguages = (options.excludeLanguages || '')
+        .split(',')
+        .map((lang) => lang.trim())
+        .filter(Boolean);
 
       const useZen = options.zen !== false;
 
@@ -176,6 +191,9 @@ cli
           repo_path: repoPath,
           information_request: informationRequest,
           technical_terms: technicalTerms.length > 0 ? technicalTerms : undefined,
+          source_code_only: options.sourceCodeOnly,
+          include_languages: includeLanguages.length > 0 ? includeLanguages : undefined,
+          exclude_languages: excludeLanguages.length > 0 ? excludeLanguages : undefined,
         },
         useZen ? undefined : {},
       );

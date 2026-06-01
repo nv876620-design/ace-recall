@@ -5,6 +5,48 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+test('search 支持语言过滤 flags 并进入真实参数冲突校验', { concurrency: false }, () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'contextweaver-cli-language-flags-'));
+
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [
+        '--import',
+        'tsx',
+        'src/index.ts',
+        'search',
+        '--repo-path',
+        process.cwd(),
+        '--information-request',
+        '定位测试入口',
+        '--technical-terms',
+        'AuthService, SearchService',
+        '--source-code-only',
+        '--include-languages',
+        'typescript,python',
+        '--exclude-languages',
+        'markdown,json',
+      ],
+      {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        env: {
+          HOME: fakeHome,
+          PATH: process.env.PATH ?? '',
+          NODE_ENV: 'production',
+        },
+      },
+    );
+
+    assert.notEqual(result.status, 0);
+    assert.doesNotMatch(result.stderr, /Unknown option/);
+    assert.match(result.stderr, /source_code_only.*include_languages.*互斥/);
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
 test('search 配置缺失时返回非零退出码', { concurrency: false }, () => {
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'contextweaver-cli-missing-env-'));
 
