@@ -162,7 +162,11 @@ export function runAutoTune(cases: AutoTuneCase[], options: AutoTuneOptions): Au
   const kValues = normalizeKValues(options.kValues);
   const grid = normalizeGrid(options.grid);
   const target = normalizeTarget(options.target, kValues);
-  const topN = Number.isFinite(options.topN) && options.topN > 0 ? Math.floor(options.topN) : 5;
+  const requestedTopN = options.topN;
+  const topN =
+    typeof requestedTopN === 'number' && Number.isFinite(requestedTopN) && requestedTopN > 0
+      ? Math.floor(requestedTopN)
+      : 5;
 
   const candidates = expandConfigs(grid).map((config) => {
     const benchmarkCases = buildBenchmarkCases(cases, config);
