@@ -6,19 +6,21 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   smoke-install:
-    name: Node ${{ matrix.node }} · ${{ matrix.pm }}
+    name: Node 22 · ${{ matrix.pm }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
         pm: ['npm', 'pnpm']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -26,9 +28,9 @@ jobs:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Install dependencies
@@ -40,7 +42,7 @@ jobs:
       - name: Create tarball
         id: pack
         run: |
-          PKG_TGZ="$(npm pack --silent)"
+          PKG_TGZ="$(npm pack --silent | tail -n 1)"
           echo "tgz=$PKG_TGZ" >> "$GITHUB_OUTPUT"
 
       - name: Smoke install via npm
