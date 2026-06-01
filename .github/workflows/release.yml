@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g., 0.1.1) (must have tag v0.1.1)'
+        description: 'Version to publish (e.g., 0.1.2) (must have tag v0.1.2)'
         required: true
         type: string
 
@@ -89,8 +89,6 @@ jobs:
             ['@alistar.max/contextweaver-lang-rust', 'packages/lang-rust/package.json'],
             ['@alistar.max/contextweaver-lang-swift', 'packages/lang-swift/package.json'],
             ['@alistar.max/contextweaver-lang-all', 'packages/lang-all/package.json'],
-            ['@alistar.max/contextweaver-lang-ts21', 'packages/lang-ts21/package.json'],
-            ['@alistar.max/contextweaver-lang-ts22', 'packages/lang-ts22/package.json'],
           ];
           let ok = true;
           for (const [name, file] of files) {
@@ -122,8 +120,6 @@ jobs:
             "@alistar.max/contextweaver-lang-rust"
             "@alistar.max/contextweaver-lang-swift"
             "@alistar.max/contextweaver-lang-all"
-            "@alistar.max/contextweaver-lang-ts21"
-            "@alistar.max/contextweaver-lang-ts22"
             "@alistar.max/contextweaver"
           )
 
@@ -171,17 +167,13 @@ jobs:
           publish_if_needed "@alistar.max/contextweaver-lang-swift" "packages/lang-swift"
           publish_if_needed "@alistar.max/contextweaver-lang-all" "packages/lang-all"
 
-          # 兼容层插件（保留发布）
-          publish_if_needed "@alistar.max/contextweaver-lang-ts21" "packages/lang-ts21"
-          publish_if_needed "@alistar.max/contextweaver-lang-ts22" "packages/lang-ts22"
-
           publish_if_needed "@alistar.max/contextweaver" "."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         if: startsWith(steps.rel.outputs.tag, 'v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.rel.outputs.tag }}
           generate_release_notes: true
@@ -193,7 +185,8 @@ jobs:
             ### 版本亮点
             - 支持 Node.js 20 / 22（Node 要求：`>=20 <24`，推荐 Node 22 LTS）
             - 主包默认内置 JavaScript / Python / Go 的 AST 分片能力
-            - 可选语言插件改为 `lang-all`（默认推荐）+ 按语言包安装
+            - TypeScript / Kotlin / Java / Rust 提升为默认核心支持
+            - C / C++ / C# / PHP / Ruby / Swift 继续通过按需插件增强
 
             ### 安装主包
             ```bash
@@ -202,16 +195,11 @@ jobs:
             pnpm add -g @alistar.max/contextweaver
             ```
 
-            ### 推荐安装（全量可选语言）
-            ```bash
-            npm install -g @alistar.max/contextweaver-lang-all
-            ```
-
             ### 按需安装（示例）
             ```bash
-            npm install -g @alistar.max/contextweaver-lang-typescript
-            npm install -g @alistar.max/contextweaver-lang-rust
+            npm install -g @alistar.max/contextweaver-lang-csharp
+            npm install -g @alistar.max/contextweaver-lang-swift
             ```
 
-            > 兼容插件 `lang-ts21` / `lang-ts22` 仍可安装，但不再推荐新用户使用。
+            > `lang-ts21` / `lang-ts22` 历史兼容包已移除；请使用主包默认核心支持或对应单语言插件。
             > 未安装插件时会自动回退到纯文本分片，不阻断索引流程。

@@ -4,23 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { pathToFileURL } from 'node:url';
-import {
-  CORE_PLUGIN_CANDIDATES,
-  DEFAULT_PLUGIN_CANDIDATES,
-  LEGACY_PLUGIN_CANDIDATES,
-  discoverPluginPackages,
-} from '../../src/chunking/runtime/PluginLoader.js';
+import { DEFAULT_PLUGIN_CANDIDATES, discoverPluginPackages } from '../../src/chunking/runtime/PluginLoader.js';
 
-test('默认插件候选应仅包含默认收敛插件，不再自动加载 legacy', () => {
-  assert.equal(DEFAULT_PLUGIN_CANDIDATES[0], '@alistar.max/contextweaver-lang-csharp');
-  assert.deepEqual(
-    DEFAULT_PLUGIN_CANDIDATES.slice(0, CORE_PLUGIN_CANDIDATES.length),
-    CORE_PLUGIN_CANDIDATES,
-  );
-  assert.equal(
-    DEFAULT_PLUGIN_CANDIDATES.some((candidate) => LEGACY_PLUGIN_CANDIDATES.includes(candidate)),
-    false,
-  );
+test('默认插件候选应切换到四个默认核心语言插件', () => {
+  assert.deepEqual(DEFAULT_PLUGIN_CANDIDATES, [
+    '@alistar.max/contextweaver-lang-typescript',
+    '@alistar.max/contextweaver-lang-kotlin',
+    '@alistar.max/contextweaver-lang-java',
+    '@alistar.max/contextweaver-lang-rust',
+  ]);
 });
 
 test('应能发现有效插件 runtime', async () => {

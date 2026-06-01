@@ -9,16 +9,16 @@ const mcpTemplateSource = fs.readFileSync('src/mcp/tools/codebaseRetrieval.ts', 
 // README: KEYS 变量作为推荐默认项（非注释）
 assert.match(readme, /^EMBEDDINGS_API_KEYS=your-api-key-here$/m);
 assert.match(readme, /^RERANK_API_KEYS=your-api-key-here$/m);
-// README: 单 key 变量作为注释兼容写法
-assert.match(readme, /^#\s*EMBEDDINGS_API_KEY=your-api-key-here$/m);
-assert.match(readme, /^#\s*RERANK_API_KEY=your-api-key-here$/m);
+// README: 面向新用户只展示多 key 示例，避免继续引导单 key 配置。
+assert.doesNotMatch(readme, /^#?\s*EMBEDDINGS_API_KEY=your-api-key-here$/m);
+assert.doesNotMatch(readme, /^#?\s*RERANK_API_KEY=your-api-key-here$/m);
 // README: 环境变量表格包含 KEYS 变量
 assert.match(readme, /\| `EMBEDDINGS_API_KEYS` \|/);
 assert.match(readme, /\| `RERANK_API_KEYS` \|/);
-// README: 提及"兼容"和"优先"
-assert.match(readme, /EMBEDDINGS_API_KEYS[\s\S]*兼容[\s\S]*EMBEDDINGS_API_KEY/);
-assert.match(readme, /RERANK_API_KEYS[\s\S]*兼容[\s\S]*RERANK_API_KEY/);
-assert.match(readme, /KEYS[\s\S]*优先/);
+// README: 只说明旧变量兼容，不提供单 key 示例值。
+assert.match(readme, /EMBEDDINGS_API_KEY[\s\S]*旧变量[\s\S]*兼容/);
+assert.match(readme, /RERANK_API_KEY[\s\S]*旧变量[\s\S]*兼容/);
+assert.match(readme, /推荐使用 `_KEYS`/);
 
 // 统一模板: KEYS 作为默认项，单 key 为注释
 assert.match(DEFAULT_ENV_TEMPLATE, /^EMBEDDINGS_API_KEYS=your-api-key-here$/m);

@@ -22,7 +22,7 @@ usage() {
   -h, --help          显示帮助
 
 说明：
-  1) 发布顺序：单语言包 -> lang-all -> 兼容包(ts21/ts22)
+  1) 发布顺序：单语言包 -> lang-all
   2) 若 npm registry 已存在同名同版本，会自动跳过
   3) provenance 默认 auto：仅在支持 OIDC 的 CI 环境自动启用
 USAGE
@@ -98,8 +98,6 @@ PLUGIN_DIRS=(
   "packages/lang-rust"
   "packages/lang-swift"
   "packages/lang-all"
-  "packages/lang-ts21"
-  "packages/lang-ts22"
 )
 
 if ! command -v npm >/dev/null 2>&1; then

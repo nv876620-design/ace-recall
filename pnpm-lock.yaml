@@ -82,34 +82,34 @@ importers:
   packages/lang-all:
     dependencies:
       '@alistar.max/contextweaver-lang-c':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-c
       '@alistar.max/contextweaver-lang-cpp':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-cpp
       '@alistar.max/contextweaver-lang-csharp':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-csharp
       '@alistar.max/contextweaver-lang-java':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-java
       '@alistar.max/contextweaver-lang-kotlin':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-kotlin
       '@alistar.max/contextweaver-lang-php':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-php
       '@alistar.max/contextweaver-lang-ruby':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-ruby
       '@alistar.max/contextweaver-lang-rust':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-rust
       '@alistar.max/contextweaver-lang-swift':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-swift
       '@alistar.max/contextweaver-lang-typescript':
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../lang-typescript
 
   packages/lang-c:
@@ -192,51 +192,6 @@ importers:
       tree-sitter:
         specifier: ^0.22.4
         version: 0.22.4
-      tree-sitter-swift:
-        specifier: ^0.7.1
-        version: 0.7.1(tree-sitter@0.22.4)
-
-  packages/lang-ts21:
-    dependencies:
-      tree-sitter:
-        specifier: ^0.21.1
-        version: 0.21.1
-      tree-sitter-c:
-        specifier: 0.23.1
-        version: 0.23.1(tree-sitter@0.21.1)
-      tree-sitter-c-sharp:
-        specifier: ^0.23.1
-        version: 0.23.1(tree-sitter@0.21.1)
-      tree-sitter-cpp:
-        specifier: ^0.23.4
-        version: 0.23.4(tree-sitter@0.21.1)
-      tree-sitter-java:
-        specifier: 0.23.5
-        version: 0.23.5(tree-sitter@0.21.1)
-      tree-sitter-kotlin:
-        specifier: ^0.3.8
-        version: 0.3.8(tree-sitter@0.21.1)
-      tree-sitter-ruby:
-        specifier: ^0.23.1
-        version: 0.23.1(tree-sitter@0.21.1)
-      tree-sitter-typescript:
-        specifier: 0.23.2
-        version: 0.23.2(tree-sitter@0.21.1)
-
-  packages/lang-ts22:
-    dependencies:
-      tree-sitter:
-        specifier: ^0.22.4
-        version: 0.22.4
-      tree-sitter-c:
-        specifier: ^0.24.1
-        version: 0.24.1(tree-sitter@0.22.4)
-      tree-sitter-php:
-        specifier: ^0.24.2
-        version: 0.24.2(tree-sitter@0.22.4)
-      tree-sitter-rust:
-        specifier: 0.24.0
-        version: 0.24.0(tree-sitter@0.22.4)
       tree-sitter-swift:
         specifier: ^0.7.1
         version: 0.7.1(tree-sitter@0.22.4)
@@ -1664,14 +1619,6 @@ packages:
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
-
-  tree-sitter-c-sharp@0.23.1:
-    resolution: {integrity: sha512-9zZ4FlcTRWWfRf6f4PgGhG8saPls6qOOt75tDfX7un9vQZJmARjPrAC6yBNCX2T/VKcCjIDbgq0evFaB3iGhQw==}
-    peerDependencies:
-      tree-sitter: ^0.21.1
-    peerDependenciesMeta:
-      tree-sitter:
-        optional: true
 
   tree-sitter-c-sharp@0.23.5:
     resolution: {integrity: sha512-xJGOeXPMmld0nES5+080N/06yY6LQi+KWGWV4LfZaZe6srJPtUtfhIbRSN7EZN6IaauzW28v6W4QHFwmeUW6HQ==}
@@ -3190,13 +3137,6 @@ snapshots:
   toidentifier@1.0.1: {}
 
   tree-kill@1.2.2: {}
-
-  tree-sitter-c-sharp@0.23.1(tree-sitter@0.21.1):
-    dependencies:
-      node-addon-api: 8.5.0
-      node-gyp-build: 4.8.4
-    optionalDependencies:
-      tree-sitter: 0.21.1
 
   tree-sitter-c-sharp@0.23.5(tree-sitter@0.25.0):
     dependencies:

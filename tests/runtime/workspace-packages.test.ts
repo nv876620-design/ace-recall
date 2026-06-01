@@ -19,8 +19,6 @@ const packageDefinitions: PackageDefinition[] = [
   { dir: 'lang-php', name: '@alistar.max/contextweaver-lang-php' },
   { dir: 'lang-rust', name: '@alistar.max/contextweaver-lang-rust' },
   { dir: 'lang-swift', name: '@alistar.max/contextweaver-lang-swift' },
-  { dir: 'lang-ts21', name: '@alistar.max/contextweaver-lang-ts21' },
-  { dir: 'lang-ts22', name: '@alistar.max/contextweaver-lang-ts22' },
 ];
 
 const requiredFiles = ['pnpm-workspace.yaml'];
