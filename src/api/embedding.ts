@@ -169,7 +169,7 @@ class RateLimitController {
   /** 连续成功次数（用于渐进恢复并发） */
   private consecutiveSuccesses = 0;
   /** 当前退避时间（毫秒） */
-  private backoffMs = 5000;
+  private backoffMs = 10000;
   /** 恢复并发所需的连续成功次数：429 后慢恢复，避免快速回到高并发再次撞限流 */
   private readonly successesPerConcurrencyIncrease = 10;
   /** 降低退避时间所需的连续成功次数：需要较长稳定窗口才认为限流解除 */
@@ -224,7 +224,10 @@ class RateLimitController {
 
     // 连续成功足够多次后，才逐步减少退避时间。
     // 429 通常说明 provider 侧吞吐已接近上限，过早降低 backoff 会导致反复抖动。
-    if (this.consecutiveSuccesses > 0 && this.consecutiveSuccesses % this.successesPerBackoffDecrease === 0) {
+    if (
+      this.consecutiveSuccesses > 0 &&
+      this.consecutiveSuccesses % this.successesPerBackoffDecrease === 0
+    ) {
       this.backoffMs = Math.max(this.minBackoffMs, this.backoffMs / 2);
     }
   }
@@ -398,7 +401,10 @@ export class EmbeddingClient {
   private markKeyBad(index: number): void {
     const banUntil = Date.now() + this.BAD_KEY_BAN_MS;
     this.badKeys.set(index, banUntil);
-    logger.warn({ keyIndex: index, banUntil: new Date(banUntil).toISOString() }, 'API Key 已标记为不可用，5 分钟后重新尝试');
+    logger.warn(
+      { keyIndex: index, banUntil: new Date(banUntil).toISOString() },
+      'API Key 已标记为不可用，5 分钟后重新尝试',
+    );
   }
 
   /**
@@ -523,7 +529,12 @@ export class EmbeddingClient {
           networkRetries++;
           const delayMs = INITIAL_RETRY_DELAY_MS * 2 ** (networkRetries - 1);
           logger.warn(
-            { error: errorMessage, retry: networkRetries, maxRetries: MAX_NETWORK_RETRIES, delayMs },
+            {
+              error: errorMessage,
+              retry: networkRetries,
+              maxRetries: MAX_NETWORK_RETRIES,
+              delayMs,
+            },
             '网络错误，准备重试',
           );
           this.rateLimiter.releaseForRetry();
@@ -539,7 +550,10 @@ export class EmbeddingClient {
 
           if (this.apiKeyPool.length > 1 && authTriedKeyIndexes.size < this.apiKeyPool.length) {
             // 401/403：标记坏 Key，下次循环换 Key 重试；单批最多尝试每个 Key 一次
-            logger.warn({ keyIndex: currentKeyIndex, error: errorMessage }, 'API Key 认证失败，切换到下一个 Key');
+            logger.warn(
+              { keyIndex: currentKeyIndex, error: errorMessage },
+              'API Key 认证失败，切换到下一个 Key',
+            );
             currentKeyIndex = null;
             currentApiKey = null;
             this.rateLimiter.releaseForRetry();
@@ -675,8 +689,12 @@ export class EmbeddingClient {
   private isAuthError(err: unknown): boolean {
     const error = err as { message?: string; status?: number };
     const message = (error.message || '').toLowerCase();
-    return message.includes('401') || message.includes('403')
-      || message.includes('unauthorized') || message.includes('forbidden');
+    return (
+      message.includes('401') ||
+      message.includes('403') ||
+      message.includes('unauthorized') ||
+      message.includes('forbidden')
+    );
   }
 
   /**
@@ -689,7 +707,6 @@ export class EmbeddingClient {
     signal: AbortSignal | undefined,
     apiKey: string,
   ): Promise<EmbeddingResult[]> {
-
     const requestBody: EmbeddingRequest = {
       model: this.config.model,
       input: texts,
