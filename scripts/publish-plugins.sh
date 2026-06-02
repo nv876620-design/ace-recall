@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 usage() {
   cat <<'USAGE'
-批量发布 ContextWeaver 插件包（不发布主包）。
+批量发布 CodeRecall 插件包（不发布主包）。
 
 用法：
   scripts/publish-plugins.sh [选项]

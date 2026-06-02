@@ -77,18 +77,18 @@ jobs:
           const fs = require('fs');
           const ver = process.env.VER;
           const files = [
-            ['@alistar.max/contextweaver', 'package.json'],
-            ['@alistar.max/contextweaver-lang-typescript', 'packages/lang-typescript/package.json'],
-            ['@alistar.max/contextweaver-lang-kotlin', 'packages/lang-kotlin/package.json'],
-            ['@alistar.max/contextweaver-lang-csharp', 'packages/lang-csharp/package.json'],
-            ['@alistar.max/contextweaver-lang-cpp', 'packages/lang-cpp/package.json'],
-            ['@alistar.max/contextweaver-lang-java', 'packages/lang-java/package.json'],
-            ['@alistar.max/contextweaver-lang-ruby', 'packages/lang-ruby/package.json'],
-            ['@alistar.max/contextweaver-lang-c', 'packages/lang-c/package.json'],
-            ['@alistar.max/contextweaver-lang-php', 'packages/lang-php/package.json'],
-            ['@alistar.max/contextweaver-lang-rust', 'packages/lang-rust/package.json'],
-            ['@alistar.max/contextweaver-lang-swift', 'packages/lang-swift/package.json'],
-            ['@alistar.max/contextweaver-lang-all', 'packages/lang-all/package.json'],
+            ['@alistar.max/coderecall', 'package.json'],
+            ['@alistar.max/coderecall-lang-typescript', 'packages/lang-typescript/package.json'],
+            ['@alistar.max/coderecall-lang-kotlin', 'packages/lang-kotlin/package.json'],
+            ['@alistar.max/coderecall-lang-csharp', 'packages/lang-csharp/package.json'],
+            ['@alistar.max/coderecall-lang-cpp', 'packages/lang-cpp/package.json'],
+            ['@alistar.max/coderecall-lang-java', 'packages/lang-java/package.json'],
+            ['@alistar.max/coderecall-lang-ruby', 'packages/lang-ruby/package.json'],
+            ['@alistar.max/coderecall-lang-c', 'packages/lang-c/package.json'],
+            ['@alistar.max/coderecall-lang-php', 'packages/lang-php/package.json'],
+            ['@alistar.max/coderecall-lang-rust', 'packages/lang-rust/package.json'],
+            ['@alistar.max/coderecall-lang-swift', 'packages/lang-swift/package.json'],
+            ['@alistar.max/coderecall-lang-all', 'packages/lang-all/package.json'],
           ];
           let ok = true;
           for (const [name, file] of files) {
@@ -109,18 +109,18 @@ jobs:
           VER="${{ steps.rel.outputs.ver }}"
 
           PACKAGE_NAMES=(
-            "@alistar.max/contextweaver-lang-typescript"
-            "@alistar.max/contextweaver-lang-kotlin"
-            "@alistar.max/contextweaver-lang-csharp"
-            "@alistar.max/contextweaver-lang-cpp"
-            "@alistar.max/contextweaver-lang-java"
-            "@alistar.max/contextweaver-lang-ruby"
-            "@alistar.max/contextweaver-lang-c"
-            "@alistar.max/contextweaver-lang-php"
-            "@alistar.max/contextweaver-lang-rust"
-            "@alistar.max/contextweaver-lang-swift"
-            "@alistar.max/contextweaver-lang-all"
-            "@alistar.max/contextweaver"
+            "@alistar.max/coderecall-lang-typescript"
+            "@alistar.max/coderecall-lang-kotlin"
+            "@alistar.max/coderecall-lang-csharp"
+            "@alistar.max/coderecall-lang-cpp"
+            "@alistar.max/coderecall-lang-java"
+            "@alistar.max/coderecall-lang-ruby"
+            "@alistar.max/coderecall-lang-c"
+            "@alistar.max/coderecall-lang-php"
+            "@alistar.max/coderecall-lang-rust"
+            "@alistar.max/coderecall-lang-swift"
+            "@alistar.max/coderecall-lang-all"
+            "@alistar.max/coderecall"
           )
 
           echo "Preflight: verify npm publish identity"
@@ -155,19 +155,19 @@ jobs:
             fi
           }
 
-          publish_if_needed "@alistar.max/contextweaver-lang-typescript" "packages/lang-typescript"
-          publish_if_needed "@alistar.max/contextweaver-lang-kotlin" "packages/lang-kotlin"
-          publish_if_needed "@alistar.max/contextweaver-lang-csharp" "packages/lang-csharp"
-          publish_if_needed "@alistar.max/contextweaver-lang-cpp" "packages/lang-cpp"
-          publish_if_needed "@alistar.max/contextweaver-lang-java" "packages/lang-java"
-          publish_if_needed "@alistar.max/contextweaver-lang-ruby" "packages/lang-ruby"
-          publish_if_needed "@alistar.max/contextweaver-lang-c" "packages/lang-c"
-          publish_if_needed "@alistar.max/contextweaver-lang-php" "packages/lang-php"
-          publish_if_needed "@alistar.max/contextweaver-lang-rust" "packages/lang-rust"
-          publish_if_needed "@alistar.max/contextweaver-lang-swift" "packages/lang-swift"
-          publish_if_needed "@alistar.max/contextweaver-lang-all" "packages/lang-all"
+          publish_if_needed "@alistar.max/coderecall-lang-typescript" "packages/lang-typescript"
+          publish_if_needed "@alistar.max/coderecall-lang-kotlin" "packages/lang-kotlin"
+          publish_if_needed "@alistar.max/coderecall-lang-csharp" "packages/lang-csharp"
+          publish_if_needed "@alistar.max/coderecall-lang-cpp" "packages/lang-cpp"
+          publish_if_needed "@alistar.max/coderecall-lang-java" "packages/lang-java"
+          publish_if_needed "@alistar.max/coderecall-lang-ruby" "packages/lang-ruby"
+          publish_if_needed "@alistar.max/coderecall-lang-c" "packages/lang-c"
+          publish_if_needed "@alistar.max/coderecall-lang-php" "packages/lang-php"
+          publish_if_needed "@alistar.max/coderecall-lang-rust" "packages/lang-rust"
+          publish_if_needed "@alistar.max/coderecall-lang-swift" "packages/lang-swift"
+          publish_if_needed "@alistar.max/coderecall-lang-all" "packages/lang-all"
 
-          publish_if_needed "@alistar.max/contextweaver" "."
+          publish_if_needed "@alistar.max/coderecall" "."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -180,7 +180,7 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            ## 🚀 ContextWeaver ${{ steps.rel.outputs.tag }}
+            ## 🚀 CodeRecall ${{ steps.rel.outputs.tag }}
 
             ### 版本亮点
             - 支持 Node.js 20 / 22（Node 要求：`>=20 <24`，推荐 Node 22 LTS）
@@ -190,15 +190,15 @@ jobs:
 
             ### 安装主包
             ```bash
-            npm install -g @alistar.max/contextweaver
+            npm install -g @alistar.max/coderecall
             # 或
-            pnpm add -g @alistar.max/contextweaver
+            pnpm add -g @alistar.max/coderecall
             ```
 
             ### 按需安装（示例）
             ```bash
-            npm install -g @alistar.max/contextweaver-lang-csharp
-            npm install -g @alistar.max/contextweaver-lang-swift
+            npm install -g @alistar.max/coderecall-lang-csharp
+            npm install -g @alistar.max/coderecall-lang-swift
             ```
 
             > `lang-ts21` / `lang-ts22` 历史兼容包已移除；请使用主包默认核心支持或对应单语言插件。
