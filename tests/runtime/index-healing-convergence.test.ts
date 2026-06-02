@@ -15,7 +15,7 @@ import type { ProcessResult } from '../../src/scanner/processor.js';
 import { closeAllVectorStores } from '../../src/vectorStore/index.js';
 
 function projectDir(projectId: string): string {
-  return path.join(os.homedir(), '.contextweaver', projectId);
+  return path.join(os.homedir(), '.coderecall', projectId);
 }
 
 test('无 chunk 文件应在索引后收敛，避免重复进入 healing 集合', async () => {

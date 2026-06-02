@@ -10,7 +10,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 function lockPath(projectId: string): string {
-  return path.join(os.homedir(), '.contextweaver', projectId, 'index.lock');
+  return path.join(os.homedir(), '.coderecall', projectId, 'index.lock');
 }
 
 test('失效锁应被清理并允许后续获取', async () => {
@@ -59,7 +59,7 @@ test('并发锁竞争时第二个请求应在短超时内失败', async () => {
   const afterRelease = await withLock(projectId, 'after-release', async () => 'after', 800);
   assert.equal(afterRelease, 'after');
 
-  await fs.rm(path.join(os.homedir(), '.contextweaver', projectId), {
+  await fs.rm(path.join(os.homedir(), '.coderecall', projectId), {
     recursive: true,
     force: true,
   });

@@ -187,9 +187,9 @@ test('缺失有效 key 时应报错并返回缺失项', { concurrency: false }, 
 });
 
 function readIsMcpMode(argv: string[]): boolean {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'contextweaver-config-mode-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-config-mode-'));
   const script = `
-    process.argv = ${JSON.stringify(['node', 'contextweaver', ...argv])};
+    process.argv = ${JSON.stringify(['node', 'coderecall', ...argv])};
     const mod = await import('./src/config.ts');
     console.log(String(mod.isMcpMode));
   `;

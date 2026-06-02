@@ -8,17 +8,17 @@ type PackageDefinition = {
 };
 
 const packageDefinitions: PackageDefinition[] = [
-  { dir: 'lang-all', name: '@alistar.max/contextweaver-lang-all' },
-  { dir: 'lang-typescript', name: '@alistar.max/contextweaver-lang-typescript' },
-  { dir: 'lang-kotlin', name: '@alistar.max/contextweaver-lang-kotlin' },
-  { dir: 'lang-csharp', name: '@alistar.max/contextweaver-lang-csharp' },
-  { dir: 'lang-cpp', name: '@alistar.max/contextweaver-lang-cpp' },
-  { dir: 'lang-java', name: '@alistar.max/contextweaver-lang-java' },
-  { dir: 'lang-ruby', name: '@alistar.max/contextweaver-lang-ruby' },
-  { dir: 'lang-c', name: '@alistar.max/contextweaver-lang-c' },
-  { dir: 'lang-php', name: '@alistar.max/contextweaver-lang-php' },
-  { dir: 'lang-rust', name: '@alistar.max/contextweaver-lang-rust' },
-  { dir: 'lang-swift', name: '@alistar.max/contextweaver-lang-swift' },
+  { dir: 'lang-all', name: '@alistar.max/coderecall-lang-all' },
+  { dir: 'lang-typescript', name: '@alistar.max/coderecall-lang-typescript' },
+  { dir: 'lang-kotlin', name: '@alistar.max/coderecall-lang-kotlin' },
+  { dir: 'lang-csharp', name: '@alistar.max/coderecall-lang-csharp' },
+  { dir: 'lang-cpp', name: '@alistar.max/coderecall-lang-cpp' },
+  { dir: 'lang-java', name: '@alistar.max/coderecall-lang-java' },
+  { dir: 'lang-ruby', name: '@alistar.max/coderecall-lang-ruby' },
+  { dir: 'lang-c', name: '@alistar.max/coderecall-lang-c' },
+  { dir: 'lang-php', name: '@alistar.max/coderecall-lang-php' },
+  { dir: 'lang-rust', name: '@alistar.max/coderecall-lang-rust' },
+  { dir: 'lang-swift', name: '@alistar.max/coderecall-lang-swift' },
 ];
 
 const requiredFiles = ['pnpm-workspace.yaml'];

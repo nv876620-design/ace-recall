@@ -8,15 +8,15 @@ import { DEFAULT_PLUGIN_CANDIDATES, discoverPluginPackages } from '../../src/chu
 
 test('默认插件候选应切换到四个默认核心语言插件', () => {
   assert.deepEqual(DEFAULT_PLUGIN_CANDIDATES, [
-    '@alistar.max/contextweaver-lang-typescript',
-    '@alistar.max/contextweaver-lang-kotlin',
-    '@alistar.max/contextweaver-lang-java',
-    '@alistar.max/contextweaver-lang-rust',
+    '@alistar.max/coderecall-lang-typescript',
+    '@alistar.max/coderecall-lang-kotlin',
+    '@alistar.max/coderecall-lang-java',
+    '@alistar.max/coderecall-lang-rust',
   ]);
 });
 
 test('应能发现有效插件 runtime', async () => {
-  const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-plugin-loader-valid-'));
+  const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cr-plugin-loader-valid-'));
 
   try {
     const validPluginPath = path.join(fixtureDir, 'valid-plugin.mjs');
@@ -56,7 +56,7 @@ test('应能发现有效插件 runtime', async () => {
 
 test('缺失插件包时应返回空数组并记录 warn', async () => {
   const missingWarns: string[] = [];
-  const missing = await discoverPluginPackages(['@alistar.max/contextweaver-lang-missing'], {
+  const missing = await discoverPluginPackages(['@alistar.max/coderecall-lang-missing'], {
     logger: {
       warn: (...args) => {
         missingWarns.push(args.map((arg) => String(arg)).join(' '));
@@ -70,7 +70,7 @@ test('缺失插件包时应返回空数组并记录 warn', async () => {
 
 test('suppressMissingModuleError=true 时应忽略缺失模块警告', async () => {
   const missingWarns: string[] = [];
-  const missing = await discoverPluginPackages(['@alistar.max/contextweaver-lang-missing'], {
+  const missing = await discoverPluginPackages(['@alistar.max/coderecall-lang-missing'], {
     suppressMissingModuleError: true,
     logger: {
       warn: (...args) => {
@@ -84,7 +84,7 @@ test('suppressMissingModuleError=true 时应忽略缺失模块警告', async () 
 });
 
 test('createRuntime 缺失或非法时应被忽略', async () => {
-  const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-plugin-loader-invalid-'));
+  const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cr-plugin-loader-invalid-'));
 
   try {
     const noFactoryPath = path.join(fixtureDir, 'no-factory.mjs');

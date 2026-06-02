@@ -6,7 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 test('search 支持语言过滤 flags 并进入真实参数冲突校验', { concurrency: false }, () => {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'contextweaver-cli-language-flags-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-language-flags-'));
 
   try {
     const result = spawnSync(
@@ -48,7 +48,7 @@ test('search 支持语言过滤 flags 并进入真实参数冲突校验', { conc
 });
 
 test('search 配置缺失时返回非零退出码', { concurrency: false }, () => {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'contextweaver-cli-missing-env-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-missing-env-'));
 
   try {
     const result = spawnSync(

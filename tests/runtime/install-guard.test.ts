@@ -20,7 +20,7 @@ test('Node 24 应在安装守卫阶段被拦截并提示切换 Node 22', () => {
     encoding: 'utf8',
     env: {
       ...process.env,
-      CONTEXTWEAVER_NODE_VERSION_OVERRIDE: 'v24.16.0',
+      CODERECALL_NODE_VERSION_OVERRIDE: 'v24.16.0',
     },
   });
 
@@ -34,7 +34,7 @@ test('Node 22 应通过安装守卫', () => {
     encoding: 'utf8',
     env: {
       ...process.env,
-      CONTEXTWEAVER_NODE_VERSION_OVERRIDE: 'v22.17.0',
+      CODERECALL_NODE_VERSION_OVERRIDE: 'v22.17.0',
     },
   });
 

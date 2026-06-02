@@ -9,7 +9,7 @@ import { DEFAULT_CONFIG } from '../../src/search/config.js';
 import type { ScoredChunk } from '../../src/search/types.js';
 
 function projectDir(projectId: string): string {
-  return path.join(os.homedir(), '.contextweaver', projectId);
+  return path.join(os.homedir(), '.coderecall', projectId);
 }
 
 function buildChunk(args: {

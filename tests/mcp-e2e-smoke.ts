@@ -53,7 +53,7 @@ async function loadRuntimeConfig(): Promise<Record<string, string> | null> {
     return envConfig;
   }
 
-  const homeEnvPath = path.join(os.homedir(), '.contextweaver', '.env');
+  const homeEnvPath = path.join(os.homedir(), '.coderecall', '.env');
   try {
     const envText = await fs.readFile(homeEnvPath, 'utf-8');
     const fileConfig = parseEnv(envText);
@@ -189,10 +189,10 @@ async function main() {
     process.exit(0);
   }
 
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'contextweaver-mcp-e2e-'));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-mcp-e2e-'));
   const fakeHome = path.join(tempRoot, 'home');
   const fakeRepo = path.join(tempRoot, 'repo');
-  const fakeConfigDir = path.join(fakeHome, '.contextweaver');
+  const fakeConfigDir = path.join(fakeHome, '.coderecall');
 
   await fs.mkdir(fakeConfigDir, { recursive: true });
   await fs.mkdir(fakeRepo, { recursive: true });
