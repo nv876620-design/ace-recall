@@ -1,14 +1,14 @@
 import type Parser from 'tree-sitter';
-import { createRuntime as createTypeScriptRuntime } from '@alistar.max/contextweaver-lang-typescript';
-import { createRuntime as createKotlinRuntime } from '@alistar.max/contextweaver-lang-kotlin';
-import { createRuntime as createCSharpRuntime } from '@alistar.max/contextweaver-lang-csharp';
-import { createRuntime as createCppRuntime } from '@alistar.max/contextweaver-lang-cpp';
-import { createRuntime as createJavaRuntime } from '@alistar.max/contextweaver-lang-java';
-import { createRuntime as createRubyRuntime } from '@alistar.max/contextweaver-lang-ruby';
-import { createRuntime as createCRuntime } from '@alistar.max/contextweaver-lang-c';
-import { createRuntime as createPhpRuntime } from '@alistar.max/contextweaver-lang-php';
-import { createRuntime as createRustRuntime } from '@alistar.max/contextweaver-lang-rust';
-import { createRuntime as createSwiftRuntime } from '@alistar.max/contextweaver-lang-swift';
+import { createRuntime as createTypeScriptRuntime } from '@alistar.max/coderecall-lang-typescript';
+import { createRuntime as createKotlinRuntime } from '@alistar.max/coderecall-lang-kotlin';
+import { createRuntime as createCSharpRuntime } from '@alistar.max/coderecall-lang-csharp';
+import { createRuntime as createCppRuntime } from '@alistar.max/coderecall-lang-cpp';
+import { createRuntime as createJavaRuntime } from '@alistar.max/coderecall-lang-java';
+import { createRuntime as createRubyRuntime } from '@alistar.max/coderecall-lang-ruby';
+import { createRuntime as createCRuntime } from '@alistar.max/coderecall-lang-c';
+import { createRuntime as createPhpRuntime } from '@alistar.max/coderecall-lang-php';
+import { createRuntime as createRustRuntime } from '@alistar.max/coderecall-lang-rust';
+import { createRuntime as createSwiftRuntime } from '@alistar.max/coderecall-lang-swift';
 
 export interface LanguageRuntime {
   id: string;

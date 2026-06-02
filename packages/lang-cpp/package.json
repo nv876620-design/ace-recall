@@ -1,11 +1,11 @@
 {
-  "name": "@alistar.max/contextweaver-lang-cpp",
+  "name": "@alistar.max/coderecall-lang-cpp",
   "version": "0.1.2",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodingOX/ContextWeaver.git"
+    "url": "git+https://github.com/CodingOX/CodeRecall.git"
   },
-  "homepage": "https://github.com/CodingOX/ContextWeaver#readme",
+  "homepage": "https://github.com/CodingOX/CodeRecall#readme",
   "publishConfig": {
     "access": "public"
   },
