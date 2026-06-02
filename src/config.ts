@@ -31,8 +31,11 @@ EMBEDDINGS_API_KEYS=your-api-key-here
 # EMBEDDINGS_API_KEY=your-api-key-here
 EMBEDDINGS_BASE_URL=https://api.siliconflow.cn/v1/embeddings
 EMBEDDINGS_MODEL=BAAI/bge-m3
-EMBEDDINGS_MAX_CONCURRENCY=10
+EMBEDDINGS_MAX_CONCURRENCY=20
 EMBEDDINGS_DIMENSIONS=1024
+# 主动限流：RPM/TPM 上限（留空或 0 表示不使用令牌桶，仅依赖 429 被动退避）
+# EMBEDDINGS_MAX_RPM=2000
+# EMBEDDINGS_MAX_TPM=1000000
 
 # Reranker 配置（必需）
 # 推荐使用 KEYS（逗号分隔多 key），方便后期扩展限速轮转
@@ -88,6 +91,10 @@ export interface EmbeddingConfig {
   maxConcurrency: number;
   /** 向量维度 */
   dimensions: number;
+  /** RPM 上限（令牌桶主动限流，0 表示不使用） */
+  maxRpm: number;
+  /** TPM 上限（令牌桶主动限流，0 表示不使用） */
+  maxTpm: number;
 }
 
 export interface RerankerConfig {
@@ -214,7 +221,7 @@ export function getEmbeddingConfig(): EmbeddingConfig {
   const apiKeys = resolveApiKeys('EMBEDDINGS_API_KEY', 'EMBEDDINGS_API_KEYS');
   const baseUrl = process.env.EMBEDDINGS_BASE_URL;
   const model = process.env.EMBEDDINGS_MODEL;
-  const maxConcurrency = parseInt(process.env.EMBEDDINGS_MAX_CONCURRENCY || '10', 10);
+  const maxConcurrency = parseInt(process.env.EMBEDDINGS_MAX_CONCURRENCY || '20', 10);
 
   if (apiKeys.length === 0) {
     throw new Error('EMBEDDINGS_API_KEY 或 EMBEDDINGS_API_KEYS 环境变量未设置');
@@ -227,6 +234,8 @@ export function getEmbeddingConfig(): EmbeddingConfig {
   }
 
   const dimensions = parseInt(process.env.EMBEDDINGS_DIMENSIONS || '1024', 10);
+  const maxRpm = parseInt(process.env.EMBEDDINGS_MAX_RPM || '0', 10);
+  const maxTpm = parseInt(process.env.EMBEDDINGS_MAX_TPM || '0', 10);
 
   return {
     apiKey: apiKeys[0],
@@ -235,6 +244,8 @@ export function getEmbeddingConfig(): EmbeddingConfig {
     model,
     maxConcurrency: Number.isNaN(maxConcurrency) ? 4 : maxConcurrency,
     dimensions: Number.isNaN(dimensions) ? 1024 : dimensions,
+    maxRpm: Number.isNaN(maxRpm) ? 0 : maxRpm,
+    maxTpm: Number.isNaN(maxTpm) ? 0 : maxTpm,
   };
 }
 

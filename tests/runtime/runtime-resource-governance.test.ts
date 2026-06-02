@@ -96,7 +96,7 @@ test('resetRateLimitController 后新客户端应获得干净状态', async () =
   const fresh = second.getRateLimiterStatus();
 
   assert.equal(fresh.currentConcurrency, 3, 'reset 后并发上限应回到新配置值');
-  assert.equal(fresh.backoffMs, 10000, 'reset 后退避时间应回到初始值');
+  assert.equal(fresh.backoffMs, 5000, 'reset 后退避时间应回到初始值 5s');
 });
 
 test('tokenBoundaryRegexCache 应限制最大条目数', () => {
@@ -159,7 +159,13 @@ test('scan 新轮次应刷新 EmbeddingClient 与 RateLimitController 状态', a
         currentConcurrency: 2,
         maxConcurrency: 2,
         activeRequests: 0,
-        backoffMs: 10000,
+        backoffMs: 5000,
+        consecutiveSuccesses: 0,
+        rpmAvailable: null,
+        tpmAvailable: null,
+        estimatedTokensPerRequest: 4000,
+        tokenBucketWaits: 0,
+        totalTokenBucketWaitMs: 0,
       },
       'scan 新轮次应以干净的速率限制状态启动',
     );

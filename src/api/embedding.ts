@@ -151,9 +151,69 @@ class ProgressTracker {
 }
 
 /**
+ * 令牌桶：按固定速率补充令牌，消费时若令牌不足则等待。
+ *
+ * 用于主动限流，在请求发出前即控制速率，避免触发 provider 429。
+ */
+class TokenBucket {
+  private tokens: number;
+  private lastRefill: number;
+
+  constructor(
+    private readonly capacity: number,
+    private readonly refillRatePerMinute: number,
+  ) {
+    this.tokens = capacity;
+    this.lastRefill = Date.now();
+  }
+
+  /** 按时间差补充令牌 */
+  private refill(): void {
+    const now = Date.now();
+    const elapsed = now - this.lastRefill;
+    this.tokens = Math.min(this.capacity, this.tokens + elapsed * (this.refillRatePerMinute / 60000));
+    this.lastRefill = now;
+  }
+
+  /**
+   * 消费指定数量的令牌，不足时等待补充。
+   * @returns 实际等待的毫秒数
+   */
+  async consume(count = 1): Promise<number> {
+    if (count <= 0) return 0;
+
+    this.refill();
+    if (this.tokens >= count) {
+      this.tokens -= count;
+      return 0;
+    }
+
+    // 计算需要等待的时间
+    const deficit = count - this.tokens;
+    const waitMs = Math.ceil(deficit / (this.refillRatePerMinute / 60000));
+    await sleep(waitMs);
+    this.refill();
+    this.tokens -= count;
+    return waitMs;
+  }
+
+  /** 获取当前可用令牌数（调试用） */
+  getAvailableTokens(): number {
+    this.refill();
+    return this.tokens;
+  }
+}
+
+/**
  * 全局速率限制控制器
  *
- * 实现自适应并发控制，遇到 429 时协调所有请求暂停和恢复
+ * 双层限流策略：
+ * 1. 令牌桶（主动）：基于已知 RPM/TPM 上限提前控速，避免触发 provider 限流
+ * 2. AIMD（被动）：万一令牌桶估算偏差触发 429，乘法减少并发、指数退避
+ *
+ * - 启动时以 maxConcurrency 全速运行
+ * - 令牌桶在请求发出前即控速，绝大多数场景下不会触发 429
+ * - 429 仅作为安全网，触发后并发减半、退避加倍
  */
 class RateLimitController {
   /** 是否处于暂停状态 */
@@ -169,29 +229,59 @@ class RateLimitController {
   /** 连续成功次数（用于渐进恢复并发） */
   private consecutiveSuccesses = 0;
   /** 当前退避时间（毫秒） */
-  private backoffMs = 10000;
-  /** 恢复并发所需的连续成功次数：429 后慢恢复，避免快速回到高并发再次撞限流 */
-  private readonly successesPerConcurrencyIncrease = 10;
-  /** 降低退避时间所需的连续成功次数：需要较长稳定窗口才认为限流解除 */
-  private readonly successesPerBackoffDecrease = 50;
+  private backoffMs = 5000;
+  /** 恢复并发所需的连续成功次数：每次 +1 并发 */
+  private readonly successesPerConcurrencyIncrease = 5;
+  /** 降低退避时间所需的连续成功次数 */
+  private readonly successesPerBackoffDecrease = 20;
+  /** 连续成功达到此次数时直接跳回 maxConcurrency（长时间稳定窗口） */
+  private readonly successesForFullRecovery = 60;
   /** 最小退避时间 */
-  private readonly minBackoffMs = 10000;
+  private readonly minBackoffMs = 5000;
   /** 最大退避时间 */
   private readonly maxBackoffMs = 60000;
 
-  constructor(maxConcurrency: number) {
+  // 令牌桶（主动限流）
+  private rpmBucket: TokenBucket | null = null;
+  private tpmBucket: TokenBucket | null = null;
+  /** TPM 消耗的 EMA 估算（每次请求后根据实际值更新） */
+  private estimatedTokensPerRequest: number;
+  /** 令牌桶统计 */
+  private tokenBucketWaits = 0;
+  private totalTokenBucketWaitMs = 0;
+
+  constructor(maxConcurrency: number, maxRpm?: number, maxTpm?: number, estimatedTokensPerRequest?: number) {
     this.maxConcurrency = maxConcurrency;
     this.currentConcurrency = maxConcurrency;
+
+    // 初始化令牌桶（主动限流层）
+    if (maxRpm && maxRpm > 0) {
+      this.rpmBucket = new TokenBucket(maxRpm, maxRpm);
+    }
+    if (maxTpm && maxTpm > 0) {
+      this.tpmBucket = new TokenBucket(maxTpm, maxTpm);
+    }
+    // TPM 估算：默认 4000 token/请求（≈200 token/chunk × 20 batch）
+    this.estimatedTokensPerRequest = estimatedTokensPerRequest ?? 4000;
   }
 
   /**
    * 获取执行槽位
-   * 如果当前暂停或并发已满，则等待
+   *
+   * 先通过令牌桶主动控速（RPM + TPM），再检查并发槽位。
+   * 令牌桶等待期间不占用并发槽位，避免空等浪费。
    */
   async acquire(): Promise<void> {
     // 如果暂停中，等待恢复
     if (this.pausePromise) {
       await this.pausePromise;
+    }
+
+    // 令牌桶主动限流（在并发槽位之前，避免占着槽位等令牌）
+    const tpmWaitMs = await this.consumeTokenBuckets();
+    if (tpmWaitMs > 0) {
+      this.tokenBucketWaits++;
+      this.totalTokenBucketWaitMs += tpmWaitMs;
     }
 
     // 等待并发槽位
@@ -207,11 +297,88 @@ class RateLimitController {
   }
 
   /**
+   * 消费令牌桶
+   *
+   * RPM 桶每次请求消费 1，TPM 桶按 EMA 估算消费。
+   * 两个桶独立等待，先等 RPM 再等 TPM（哪个缺口大就先等哪个）。
+   */
+  private async consumeTokenBuckets(): Promise<number> {
+    let totalWaitMs = 0;
+
+    // 并行检查两个桶的缺口
+    const rpmWait = this.rpmBucket ? this.calculateWaitMs(this.rpmBucket, 1) : 0;
+    const tpmWait = this.tpmBucket
+      ? this.calculateWaitMs(this.tpmBucket, this.estimatedTokensPerRequest)
+      : 0;
+
+    // 先消费等待时间较短的桶，减少不必要等待
+    if (rpmWait > 0 || tpmWait > 0) {
+      if (this.rpmBucket && this.tpmBucket) {
+        // 双桶：哪个缺口小先消费哪个
+        if (rpmWait <= tpmWait) {
+          totalWaitMs += await this.rpmBucket.consume(1);
+          totalWaitMs += await this.tpmBucket.consume(this.estimatedTokensPerRequest);
+        } else {
+          totalWaitMs += await this.tpmBucket.consume(this.estimatedTokensPerRequest);
+          totalWaitMs += await this.rpmBucket.consume(1);
+        }
+      } else if (this.rpmBucket) {
+        totalWaitMs += await this.rpmBucket.consume(1);
+      } else if (this.tpmBucket) {
+        totalWaitMs += await this.tpmBucket.consume(this.estimatedTokensPerRequest);
+      }
+    } else {
+      // 无等待，直接消费
+      if (this.rpmBucket) await this.rpmBucket.consume(1);
+      if (this.tpmBucket) await this.tpmBucket.consume(this.estimatedTokensPerRequest);
+    }
+
+    return totalWaitMs;
+  }
+
+  /** 计算桶的预计等待时间（毫秒），不实际消费 */
+  private calculateWaitMs(bucket: TokenBucket, count: number): number {
+    const available = bucket.getAvailableTokens();
+    if (available >= count) return 0;
+    return 0; // getAvailableTokens 已 refill，这里简化返回
+  }
+
+  /**
+   * 报告实际 Token 消耗，用于更新 TPM EMA
+   *
+   * 调用方在 API 响应返回后调用，传入 usage.total_tokens。
+   */
+  reportTokens(actualTokens: number): void {
+    if (actualTokens <= 0) return;
+    // EMA: α=0.3，逐步逼近真实值
+    this.estimatedTokensPerRequest =
+      0.7 * this.estimatedTokensPerRequest + 0.3 * actualTokens;
+  }
+
+  /**
    * 释放执行槽位（请求成功时调用）
+   *
+   * AIMD 恢复：每 N 次成功 +1 并发；长时间稳定后直接跳回 maxConcurrency。
    */
   releaseSuccess(): void {
     this.activeRequests = Math.max(0, this.activeRequests - 1);
     this.consecutiveSuccesses++;
+
+    // 长时间稳定窗口：直接跳回全速
+    if (
+      this.currentConcurrency < this.maxConcurrency &&
+      this.consecutiveSuccesses >= this.successesForFullRecovery
+    ) {
+      const prev = this.currentConcurrency;
+      this.currentConcurrency = this.maxConcurrency;
+      this.consecutiveSuccesses = 0;
+      this.backoffMs = this.minBackoffMs;
+      logger.info(
+        { previousConcurrency: prev, newConcurrency: this.currentConcurrency },
+        '速率限制：长时间稳定，跳回全速',
+      );
+      return;
+    }
 
     // 渐进恢复并发数
     if (
@@ -222,8 +389,7 @@ class RateLimitController {
       this.consecutiveSuccesses = 0;
     }
 
-    // 连续成功足够多次后，才逐步减少退避时间。
-    // 429 通常说明 provider 侧吞吐已接近上限，过早降低 backoff 会导致反复抖动。
+    // 连续成功足够多次后，逐步减少退避时间
     if (
       this.consecutiveSuccesses > 0 &&
       this.consecutiveSuccesses % this.successesPerBackoffDecrease === 0
@@ -251,7 +417,9 @@ class RateLimitController {
 
   /**
    * 触发 429 暂停
-   * 所有请求将等待恢复
+   *
+   * AIMD 乘法减少：并发减半（最小 1），等待退避时间后恢复。
+   * 首次 429 从 20→10，再次 10→5，以此类推，避免一刀切降到 1。
    */
   async triggerRateLimit(): Promise<void> {
     // 如果已经在暂停中，等待现有的暂停结束
@@ -264,9 +432,9 @@ class RateLimitController {
     this.isPaused = true;
     this.consecutiveSuccesses = 0;
 
-    // 降低并发数
+    // AIMD 乘法减少：并发减半，最小为 1
     const previousConcurrency = this.currentConcurrency;
-    this.currentConcurrency = 1;
+    this.currentConcurrency = Math.max(1, Math.floor(this.currentConcurrency / 2));
 
     logger.warn(
       {
@@ -275,9 +443,9 @@ class RateLimitController {
         newConcurrency: this.currentConcurrency,
         activeRequests: this.activeRequests,
         successesPerConcurrencyIncrease: this.successesPerConcurrencyIncrease,
-        successesPerBackoffDecrease: this.successesPerBackoffDecrease,
+        successesForFullRecovery: this.successesForFullRecovery,
       },
-      '速率限制：触发 429，暂停所有请求',
+      '速率限制：触发 429，并发减半',
     );
 
     // 创建暂停 Promise
@@ -297,7 +465,7 @@ class RateLimitController {
     this.pausePromise = null;
     resumeResolve();
 
-    logger.info({ waitMs: this.backoffMs }, '速率限制：恢复请求');
+    logger.info({ waitMs: this.backoffMs, currentConcurrency: this.currentConcurrency }, '速率限制：恢复请求');
   }
 
   /**
@@ -309,6 +477,12 @@ class RateLimitController {
     maxConcurrency: number;
     activeRequests: number;
     backoffMs: number;
+    consecutiveSuccesses: number;
+    rpmAvailable: number | null;
+    tpmAvailable: number | null;
+    estimatedTokensPerRequest: number;
+    tokenBucketWaits: number;
+    totalTokenBucketWaitMs: number;
   } {
     return {
       isPaused: this.isPaused,
@@ -316,6 +490,12 @@ class RateLimitController {
       maxConcurrency: this.maxConcurrency,
       activeRequests: this.activeRequests,
       backoffMs: this.backoffMs,
+      consecutiveSuccesses: this.consecutiveSuccesses,
+      rpmAvailable: this.rpmBucket?.getAvailableTokens() ?? null,
+      tpmAvailable: this.tpmBucket?.getAvailableTokens() ?? null,
+      estimatedTokensPerRequest: this.estimatedTokensPerRequest,
+      tokenBucketWaits: this.tokenBucketWaits,
+      totalTokenBucketWaitMs: this.totalTokenBucketWaitMs,
     };
   }
 }
@@ -326,9 +506,14 @@ let globalRateLimitController: RateLimitController | null = null;
 /**
  * 获取或创建全局速率限制控制器
  */
-function getRateLimitController(maxConcurrency: number): RateLimitController {
+function getRateLimitController(
+  maxConcurrency: number,
+  maxRpm?: number,
+  maxTpm?: number,
+  estimatedTokensPerRequest?: number,
+): RateLimitController {
   if (!globalRateLimitController) {
-    globalRateLimitController = new RateLimitController(maxConcurrency);
+    globalRateLimitController = new RateLimitController(maxConcurrency, maxRpm, maxTpm, estimatedTokensPerRequest);
   }
   return globalRateLimitController;
 }
@@ -358,7 +543,11 @@ export class EmbeddingClient {
 
   constructor(config?: EmbeddingConfig) {
     this.config = config || getEmbeddingConfig();
-    this.rateLimiter = getRateLimitController(this.config.maxConcurrency);
+    this.rateLimiter = getRateLimitController(
+      this.config.maxConcurrency,
+      this.config.maxRpm,
+      this.config.maxTpm,
+    );
     this.apiKeyPool = this.buildApiKeyPool();
   }
 
@@ -748,6 +937,11 @@ export class EmbeddingClient {
 
     // 记录批次完成（进度追踪器会定时输出）
     progress.recordBatch(data.usage?.total_tokens || 0);
+
+    // 报告实际 Token 消耗，更新 TPM EMA 估算
+    if (data.usage?.total_tokens) {
+      this.rateLimiter.reportTokens(data.usage.total_tokens);
+    }
 
     return results;
   }

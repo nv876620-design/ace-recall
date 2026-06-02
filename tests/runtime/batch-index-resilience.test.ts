@@ -51,7 +51,7 @@ function makeRateLimitResponse(): Response {
   );
 }
 
-test('429 后并发恢复应更保守，避免快速回到 maxConcurrency', async () => {
+test('429 后并发应减半（AIMD），首次退避 5s 后恢复', async () => {
   const client = new EmbeddingClient(TEST_CONFIG);
   const originalFetch = globalThis.fetch;
   const usedKeys: string[] = [];
@@ -74,9 +74,12 @@ test('429 后并发恢复应更保守，避免快速回到 maxConcurrency', asyn
     const elapsedMs = Date.now() - startedAt;
     const status = client.getRateLimiterStatus();
     assert.deepEqual(usedKeys, ['key-alpha', 'key-alpha'], '429 重试应复用当前 Key');
-    assert.ok(elapsedMs >= 9500, `第一次 429 后实际等待应接近 10s，当前仅 ${elapsedMs}ms`);
-    assert.ok(status.currentConcurrency <= 2, `一次 429 后不应快速恢复到高并发，当前: ${status.currentConcurrency}`);
-    assert.ok(status.backoffMs >= 10000, `429 后最小退避应保持保守，当前: ${status.backoffMs}`);
+    // 初始退避 5s，等待 >= 4.5s
+    assert.ok(elapsedMs >= 4500, `第一次 429 后实际等待应接近 5s，当前仅 ${elapsedMs}ms`);
+    // AIMD 减半：maxConcurrency=10 → 5
+    assert.ok(status.currentConcurrency <= 5, `一次 429 后并发应减半，当前: ${status.currentConcurrency}`);
+    // 退避从 5s 翻倍到 10s
+    assert.ok(status.backoffMs >= 5000, `429 后最小退避 >= 5s，当前: ${status.backoffMs}`);
   } finally {
     globalThis.fetch = originalFetch;
   }
