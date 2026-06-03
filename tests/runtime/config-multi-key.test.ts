@@ -16,6 +16,14 @@ const MANAGED_ENV_KEYS = [
   'EMBEDDINGS_API_KEYS',
   'EMBEDDINGS_BASE_URL',
   'EMBEDDINGS_MODEL',
+  'EMBEDDINGS_MAX_CONCURRENCY',
+  'EMBEDDINGS_MAX_RPM',
+  'EMBEDDINGS_MAX_TPM',
+  'EMBEDDINGS_KEY_MAX_CONCURRENCIES',
+  'EMBEDDINGS_KEY_MAX_RPMS',
+  'EMBEDDINGS_KEY_MAX_TPMS',
+  'EMBEDDINGS_RATE_PROFILE',
+  'CODE_RECALL_PROFILE',
   'RERANK_API_KEY',
   'RERANK_API_KEYS',
   'RERANK_BASE_URL',
@@ -182,6 +190,77 @@ test('缺失有效 key 时应报错并返回缺失项', { concurrency: false }, 
         /EMBEDDINGS_API_KEY 或 EMBEDDINGS_API_KEYS 环境变量未设置/,
       );
       assert.throws(() => getRerankerConfig(), /RERANK_API_KEY 或 RERANK_API_KEYS 环境变量未设置/);
+    },
+  );
+});
+
+test('应为每个 embedding key 解析独立的限流配置', { concurrency: false }, () => {
+  runWithEnv(
+    {
+      EMBEDDINGS_API_KEYS: 'key-a,key-b,key-c',
+      EMBEDDINGS_BASE_URL: 'https://example.com/embeddings',
+      EMBEDDINGS_MODEL: 'text-embedding-model',
+      EMBEDDINGS_MAX_CONCURRENCY: '20',
+      EMBEDDINGS_MAX_RPM: '2000',
+      EMBEDDINGS_MAX_TPM: '500000',
+      EMBEDDINGS_KEY_MAX_CONCURRENCIES: '4,6',
+      EMBEDDINGS_KEY_MAX_RPMS: '800,1200,1600',
+      EMBEDDINGS_KEY_MAX_TPMS: '100000,200000',
+    },
+    () => {
+      const config = getEmbeddingConfig();
+
+      assert.deepEqual(config.apiKeys, ['key-a', 'key-b', 'key-c']);
+      assert.deepEqual(config.keyConfigs, [
+        { apiKey: 'key-a', maxConcurrency: 4, maxRpm: 800, maxTpm: 100000 },
+        { apiKey: 'key-b', maxConcurrency: 6, maxRpm: 1200, maxTpm: 200000 },
+        { apiKey: 'key-c', maxConcurrency: 20, maxRpm: 1600, maxTpm: 500000 },
+      ]);
+    },
+  );
+});
+
+test('embedding rate profile 应提供默认限流配置且允许细参数覆盖', { concurrency: false }, () => {
+  runWithEnv(
+    {
+      EMBEDDINGS_API_KEYS: 'key-a,key-b',
+      EMBEDDINGS_BASE_URL: 'https://example.com/embeddings',
+      EMBEDDINGS_MODEL: 'text-embedding-model',
+      EMBEDDINGS_RATE_PROFILE: 'fast',
+      EMBEDDINGS_KEY_MAX_TPMS: '1500000',
+    },
+    () => {
+      const config = getEmbeddingConfig();
+
+      assert.equal(config.rateProfile, 'fast');
+      assert.equal(config.maxConcurrency, 30);
+      assert.equal(config.maxRpm, 2000);
+      assert.equal(config.maxTpm, 1000000);
+      assert.deepEqual(config.keyConfigs, [
+        { apiKey: 'key-a', maxConcurrency: 30, maxRpm: 2000, maxTpm: 1500000 },
+        { apiKey: 'key-b', maxConcurrency: 30, maxRpm: 2000, maxTpm: 1000000 },
+      ]);
+    },
+  );
+});
+
+test('index profile 应映射为分片配置', { concurrency: false }, () => {
+  runWithEnv(
+    {
+      EMBEDDINGS_API_KEYS: 'key-a',
+      EMBEDDINGS_BASE_URL: 'https://example.com/embeddings',
+      EMBEDDINGS_MODEL: 'text-embedding-model',
+      CODE_RECALL_PROFILE: 'quality',
+    },
+    () => {
+      const config = getEmbeddingConfig();
+
+      assert.equal(config.indexProfile, 'quality');
+      assert.deepEqual(config.chunking, {
+        maxChunkSize: 500,
+        minChunkSize: 50,
+        chunkOverlap: 40,
+      });
     },
   );
 });

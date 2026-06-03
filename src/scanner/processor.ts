@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import pLimit from 'p-limit';
 import { getParser, type ProcessedChunk, SemanticSplitter } from '../chunking/index.js';
+import { getChunkingConfig, getCodeRecallProfile } from '../config.js';
 import { readFileWithEncoding } from '../utils/encoding.js';
 import { sha256 } from './hash.js';
 import { getAllowedLanguages, getLanguage, isAllowedExtension } from './language.js';
@@ -66,14 +67,17 @@ function getAdaptiveConcurrency(): number {
   return concurrency;
 }
 
-/**
- * 分片器单例
- */
-const splitter = new SemanticSplitter({
-  maxChunkSize: 500,
-  minChunkSize: 50,
-  chunkOverlap: 40, // 混合检索(BM25+向量+rerank)下的保守 overlap
-});
+let splitter: SemanticSplitter | null = null;
+let splitterProfile: string | null = null;
+
+function getSplitter(): SemanticSplitter {
+  const profile = getCodeRecallProfile();
+  if (!splitter || splitterProfile !== profile) {
+    splitter = new SemanticSplitter(getChunkingConfig());
+    splitterProfile = profile;
+  }
+  return splitter;
+}
 
 /**
  * 文件处理结果
@@ -100,6 +104,43 @@ export interface KnownFileMeta {
   size: number;
 }
 
+export interface ProcessTiming {
+  files: number;
+  changedFiles: number;
+  unchangedFiles: number;
+  skippedFiles: number;
+  statMs: number;
+  readMs: number;
+  hashMs: number;
+  parserLoadMs: number;
+  astParseMs: number;
+  astSplitMs: number;
+  fallbackSplitMs: number;
+  largeFallbackSplitMs: number;
+}
+
+export function createProcessTiming(): ProcessTiming {
+  return {
+    files: 0,
+    changedFiles: 0,
+    unchangedFiles: 0,
+    skippedFiles: 0,
+    statMs: 0,
+    readMs: 0,
+    hashMs: 0,
+    parserLoadMs: 0,
+    astParseMs: 0,
+    astSplitMs: 0,
+    fallbackSplitMs: 0,
+    largeFallbackSplitMs: 0,
+  };
+}
+
+function addTiming(timing: ProcessTiming | undefined, key: keyof ProcessTiming, ms: number): void {
+  if (!timing) return;
+  timing[key] += ms;
+}
+
 /**
  * 处理单个文件
  */
@@ -107,11 +148,15 @@ async function processFile(
   absPath: string,
   relPath: string,
   known?: KnownFileMeta,
+  timing?: ProcessTiming,
 ): Promise<ProcessResult> {
   const language = getLanguage(relPath);
+  if (timing) timing.files++;
 
   try {
+    const statStartedAt = Date.now();
     const stat = await fs.stat(absPath);
+    addTiming(timing, 'statMs', Date.now() - statStartedAt);
     const mtime = stat.mtimeMs;
     const size = stat.size;
     const isKnownExtension = isAllowedExtension(relPath);
@@ -124,6 +169,7 @@ async function processFile(
       size <= KNOWN_EXTENSION_MAX_FILE_SIZE;
 
     if (size > maxFileSize) {
+      if (timing) timing.skippedFiles++;
       return {
         absPath,
         relPath,
@@ -140,6 +186,7 @@ async function processFile(
 
     // 快速跳过：如果 mtime 和 size 都没变，则认为文件未修改
     if (known && known.mtime === mtime && known.size === size) {
+      if (timing) timing.unchangedFiles++;
       return {
         absPath,
         relPath,
@@ -154,10 +201,13 @@ async function processFile(
     }
 
     // 读取文件内容（自动检测编码并转换为 UTF-8）
+    const readStartedAt = Date.now();
     const { content, originalEncoding } = await readFileWithEncoding(absPath);
+    addTiming(timing, 'readMs', Date.now() - readStartedAt);
 
     // 二进制检测：检查 NULL 字节
     if (content.includes('\0')) {
+      if (timing) timing.skippedFiles++;
       return {
         absPath,
         relPath,
@@ -173,10 +223,13 @@ async function processFile(
     }
 
     // 计算哈希
+    const hashStartedAt = Date.now();
     const hash = sha256(content);
+    addTiming(timing, 'hashMs', Date.now() - hashStartedAt);
 
     // 如果已知 hash 且相同，则认为未修改（mtime 可能由于某些原因变了）
     if (known && known.hash === hash) {
+      if (timing) timing.unchangedFiles++;
       return {
         absPath,
         relPath,
@@ -192,6 +245,7 @@ async function processFile(
 
     // ===== JSON 文件特殊处理 =====
     if (language === 'json' && shouldSkipJson(relPath)) {
+      if (timing) timing.skippedFiles++;
       return {
         absPath,
         relPath,
@@ -210,14 +264,22 @@ async function processFile(
     let chunks: ProcessedChunk[] = [];
 
     if (shouldUseLargeFileFallback) {
-      chunks = splitter.splitPlainText(content, relPath, language);
+      const splitStartedAt = Date.now();
+      chunks = getSplitter().splitPlainText(content, relPath, language);
+      addTiming(timing, 'largeFallbackSplitMs', Date.now() - splitStartedAt);
     } else {
       // 1. 尝试 AST 分片
       try {
+        const parserLoadStartedAt = Date.now();
         const parser = await getParser(language);
+        addTiming(timing, 'parserLoadMs', Date.now() - parserLoadStartedAt);
         if (parser) {
+          const astParseStartedAt = Date.now();
           const tree = parser.parse(content);
-          chunks = splitter.split(tree, content, relPath, language);
+          addTiming(timing, 'astParseMs', Date.now() - astParseStartedAt);
+          const astSplitStartedAt = Date.now();
+          chunks = getSplitter().split(tree, content, relPath, language);
+          addTiming(timing, 'astSplitMs', Date.now() - astSplitStartedAt);
         }
       } catch (err) {
         const error = err as { message?: string };
@@ -228,9 +290,12 @@ async function processFile(
 
     // 兜底分片：对 FALLBACK_LANGS 语言，如果 AST 分片失败或返回空，使用行分片
     if (chunks.length === 0 && FALLBACK_LANGS.has(language)) {
-      chunks = splitter.splitPlainText(content, relPath, language);
+      const splitStartedAt = Date.now();
+      chunks = getSplitter().splitPlainText(content, relPath, language);
+      addTiming(timing, 'fallbackSplitMs', Date.now() - splitStartedAt);
     }
 
+    if (timing) timing.changedFiles++;
     return {
       absPath,
       relPath,
@@ -243,6 +308,7 @@ async function processFile(
       status: known ? 'modified' : 'added',
     };
   } catch (err) {
+    if (timing) timing.skippedFiles++;
     const error = err as { message?: string };
     return {
       absPath,
@@ -266,6 +332,7 @@ export async function processFiles(
   rootPath: string,
   filePaths: string[],
   knownFiles: Map<string, KnownFileMeta>,
+  options: { timing?: ProcessTiming } = {},
 ): Promise<ProcessResult[]> {
   const concurrency = getAdaptiveConcurrency();
   const limit = pLimit(concurrency);
@@ -274,7 +341,7 @@ export async function processFiles(
     // 标准化路径分隔符为 /，确保跨平台一致性
     const relPath = path.relative(rootPath, filePath).replace(/\\/g, '/');
     const known = knownFiles.get(relPath);
-    return limit(() => processFile(filePath, relPath, known));
+    return limit(() => processFile(filePath, relPath, known, options.timing));
   });
 
   return Promise.all(tasks);

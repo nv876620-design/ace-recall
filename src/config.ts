@@ -31,11 +31,21 @@ EMBEDDINGS_API_KEYS=your-api-key-here
 # EMBEDDINGS_API_KEY=your-api-key-here
 EMBEDDINGS_BASE_URL=https://api.siliconflow.cn/v1/embeddings
 EMBEDDINGS_MODEL=BAAI/bge-m3
-EMBEDDINGS_MAX_CONCURRENCY=20
 EMBEDDINGS_DIMENSIONS=1024
-# 主动限流：RPM/TPM 上限（留空或 0 表示不使用令牌桶，仅依赖 429 被动退避）
+
+# 默认配置档位
+# CODE_RECALL_PROFILE: quality | balanced | performance
+# EMBEDDINGS_RATE_PROFILE: safe | balanced | fast
+CODE_RECALL_PROFILE=balanced
+EMBEDDINGS_RATE_PROFILE=balanced
+
+# 高级覆盖项：通常不需要配置
+# EMBEDDINGS_MAX_CONCURRENCY=20
 # EMBEDDINGS_MAX_RPM=2000
-# EMBEDDINGS_MAX_TPM=1000000
+# EMBEDDINGS_MAX_TPM=500000
+# EMBEDDINGS_KEY_MAX_CONCURRENCIES=20,20
+# EMBEDDINGS_KEY_MAX_RPMS=2000,2000
+# EMBEDDINGS_KEY_MAX_TPMS=500000,500000
 
 # Reranker 配置（必需）
 # 推荐使用 KEYS（逗号分隔多 key），方便后期扩展限速轮转
@@ -86,6 +96,15 @@ loadEnv();
 export interface EmbeddingConfig {
   apiKey: string;
   apiKeys?: string[];
+  rateProfile: EmbeddingRateProfile;
+  indexProfile: CodeRecallProfile;
+  chunking: ChunkingProfileConfig;
+  keyConfigs?: Array<{
+    apiKey: string;
+    maxConcurrency: number;
+    maxRpm: number;
+    maxTpm: number;
+  }>;
   baseUrl: string;
   model: string;
   maxConcurrency: number;
@@ -103,6 +122,39 @@ export interface RerankerConfig {
   baseUrl: string;
   model: string;
   topN: number;
+}
+
+export type EmbeddingRateProfile = 'safe' | 'balanced' | 'fast';
+export type CodeRecallProfile = 'quality' | 'balanced' | 'performance';
+
+export interface ChunkingProfileConfig {
+  maxChunkSize: number;
+  minChunkSize: number;
+  chunkOverlap: number;
+}
+
+const RATE_PROFILE_DEFAULTS: Record<
+  EmbeddingRateProfile,
+  { maxConcurrency: number; maxRpm: number; maxTpm: number }
+> = {
+  safe: { maxConcurrency: 10, maxRpm: 600, maxTpm: 300000 },
+  balanced: { maxConcurrency: 20, maxRpm: 2000, maxTpm: 500000 },
+  fast: { maxConcurrency: 30, maxRpm: 2000, maxTpm: 1000000 },
+};
+
+const CHUNKING_PROFILE_DEFAULTS: Record<CodeRecallProfile, ChunkingProfileConfig> = {
+  quality: { maxChunkSize: 500, minChunkSize: 50, chunkOverlap: 40 },
+  balanced: { maxChunkSize: 700, minChunkSize: 100, chunkOverlap: 32 },
+  performance: { maxChunkSize: 900, minChunkSize: 120, chunkOverlap: 24 },
+};
+
+function resolveProfile<T extends string>(
+  value: string | undefined,
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  const normalized = value?.trim().toLowerCase();
+  return allowed.includes(normalized as T) ? (normalized as T) : fallback;
 }
 
 // API 配置获取
@@ -165,6 +217,29 @@ function resolveApiKeys(singleKeyEnvName: string, multiKeyEnvName: string): stri
   return [...new Set(merged)];
 }
 
+function parsePerKeyNumberList(value: string | undefined): number[] {
+  if (!value) {
+    return [];
+  }
+
+  return value.split(',').map((item) => {
+    const parsed = parseInt(item.trim(), 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  });
+}
+
+export function getCodeRecallProfile(): CodeRecallProfile {
+  return resolveProfile<CodeRecallProfile>(
+    process.env.CODE_RECALL_PROFILE,
+    ['quality', 'balanced', 'performance'],
+    'balanced',
+  );
+}
+
+export function getChunkingConfig(): ChunkingProfileConfig {
+  return CHUNKING_PROFILE_DEFAULTS[getCodeRecallProfile()];
+}
+
 /**
  * 检查 Embedding 相关环境变量是否已配置（不抛出错误）
  * @returns 检查结果，包含是否有效和缺失的变量列表
@@ -221,7 +296,18 @@ export function getEmbeddingConfig(): EmbeddingConfig {
   const apiKeys = resolveApiKeys('EMBEDDINGS_API_KEY', 'EMBEDDINGS_API_KEYS');
   const baseUrl = process.env.EMBEDDINGS_BASE_URL;
   const model = process.env.EMBEDDINGS_MODEL;
-  const maxConcurrency = parseInt(process.env.EMBEDDINGS_MAX_CONCURRENCY || '20', 10);
+  const rateProfile = resolveProfile<EmbeddingRateProfile>(
+    process.env.EMBEDDINGS_RATE_PROFILE,
+    ['safe', 'balanced', 'fast'],
+    'balanced',
+  );
+  const indexProfile = getCodeRecallProfile();
+  const rateDefaults = RATE_PROFILE_DEFAULTS[rateProfile];
+  const chunking = getChunkingConfig();
+  const maxConcurrency = parseInt(
+    process.env.EMBEDDINGS_MAX_CONCURRENCY || String(rateDefaults.maxConcurrency),
+    10,
+  );
 
   if (apiKeys.length === 0) {
     throw new Error('EMBEDDINGS_API_KEY 或 EMBEDDINGS_API_KEYS 环境变量未设置');
@@ -234,18 +320,37 @@ export function getEmbeddingConfig(): EmbeddingConfig {
   }
 
   const dimensions = parseInt(process.env.EMBEDDINGS_DIMENSIONS || '1024', 10);
-  const maxRpm = parseInt(process.env.EMBEDDINGS_MAX_RPM || '0', 10);
-  const maxTpm = parseInt(process.env.EMBEDDINGS_MAX_TPM || '0', 10);
+  const maxRpm = parseInt(process.env.EMBEDDINGS_MAX_RPM || String(rateDefaults.maxRpm), 10);
+  const maxTpm = parseInt(process.env.EMBEDDINGS_MAX_TPM || String(rateDefaults.maxTpm), 10);
+  const keyMaxConcurrencies = parsePerKeyNumberList(process.env.EMBEDDINGS_KEY_MAX_CONCURRENCIES);
+  const keyMaxRpms = parsePerKeyNumberList(process.env.EMBEDDINGS_KEY_MAX_RPMS);
+  const keyMaxTpms = parsePerKeyNumberList(process.env.EMBEDDINGS_KEY_MAX_TPMS);
+
+  const normalizedMaxConcurrency = Number.isNaN(maxConcurrency) ? 4 : maxConcurrency;
+  const normalizedDimensions = Number.isNaN(dimensions) ? 1024 : dimensions;
+  const normalizedMaxRpm = Number.isNaN(maxRpm) ? 0 : maxRpm;
+  const normalizedMaxTpm = Number.isNaN(maxTpm) ? 0 : maxTpm;
+
+  const keyConfigs = apiKeys.map((apiKey, index) => ({
+    apiKey,
+    maxConcurrency: keyMaxConcurrencies[index] > 0 ? keyMaxConcurrencies[index] : normalizedMaxConcurrency,
+    maxRpm: keyMaxRpms[index] > 0 ? keyMaxRpms[index] : normalizedMaxRpm,
+    maxTpm: keyMaxTpms[index] > 0 ? keyMaxTpms[index] : normalizedMaxTpm,
+  }));
 
   return {
     apiKey: apiKeys[0],
     apiKeys,
+    rateProfile,
+    indexProfile,
+    chunking,
+    keyConfigs,
     baseUrl,
     model,
-    maxConcurrency: Number.isNaN(maxConcurrency) ? 4 : maxConcurrency,
-    dimensions: Number.isNaN(dimensions) ? 1024 : dimensions,
-    maxRpm: Number.isNaN(maxRpm) ? 0 : maxRpm,
-    maxTpm: Number.isNaN(maxTpm) ? 0 : maxTpm,
+    maxConcurrency: normalizedMaxConcurrency,
+    dimensions: normalizedDimensions,
+    maxRpm: normalizedMaxRpm,
+    maxTpm: normalizedMaxTpm,
   };
 }
 
