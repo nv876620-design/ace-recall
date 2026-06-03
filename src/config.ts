@@ -333,7 +333,8 @@ export function getEmbeddingConfig(): EmbeddingConfig {
 
   const keyConfigs = apiKeys.map((apiKey, index) => ({
     apiKey,
-    maxConcurrency: keyMaxConcurrencies[index] > 0 ? keyMaxConcurrencies[index] : normalizedMaxConcurrency,
+    maxConcurrency:
+      keyMaxConcurrencies[index] > 0 ? keyMaxConcurrencies[index] : normalizedMaxConcurrency,
     maxRpm: keyMaxRpms[index] > 0 ? keyMaxRpms[index] : normalizedMaxRpm,
     maxTpm: keyMaxTpms[index] > 0 ? keyMaxTpms[index] : normalizedMaxTpm,
   }));

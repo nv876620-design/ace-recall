@@ -1,5 +1,5 @@
-import fs from 'node:fs/promises';
 import { isUtf8 } from 'node:buffer';
+import fs from 'node:fs/promises';
 import chardet from 'chardet';
 import iconv from 'iconv-lite';
 

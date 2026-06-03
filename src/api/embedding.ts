@@ -526,12 +526,7 @@ function getRateLimitControllerByKey(
 
   let controller = globalRateLimitControllersByKey.get(apiKey);
   if (!controller) {
-    controller = new RateLimitController(
-      maxConcurrency,
-      maxRpm,
-      maxTpm,
-      estimatedTokensPerRequest,
-    );
+    controller = new RateLimitController(maxConcurrency, maxRpm, maxTpm, estimatedTokensPerRequest);
     globalRateLimitControllersByKey.set(apiKey, controller);
   }
 
