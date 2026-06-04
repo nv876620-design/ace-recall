@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-test('search 支持语言过滤 flags 并进入真实参数冲突校验', { concurrency: false }, () => {
+test('search source_code_only + include_languages 组合不再互斥，取交集后正常进入搜索', { concurrency: false }, () => {
   const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-language-flags-'));
 
   try {
@@ -39,9 +39,9 @@ test('search 支持语言过滤 flags 并进入真实参数冲突校验', { conc
       },
     );
 
-    assert.notEqual(result.status, 0);
-    assert.doesNotMatch(result.stderr, /Unknown option/);
-    assert.match(result.stderr, /source_code_only.*include_languages.*互斥/);
+    // 不再报互斥错误，正常进入搜索流程（因缺少 API key 而失败）
+    assert.doesNotMatch(result.stderr, /互斥/);
+    assert.match(result.stdout, /配置缺失/);
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });
   }

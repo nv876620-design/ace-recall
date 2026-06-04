@@ -25,11 +25,6 @@ coderecall search --information-request "How is the user authentication flow imp
 # 仅搜索源码（排除 markdown/json/yaml/toml/xml 等非代码文件）
 coderecall search --information-request "Error handling patterns" --source-code-only
 
-# 限定语言
-coderecall search --information-request "Database migration logic" --include-languages "typescript,sql"
-
-# 组合过滤：源码中去掉脚本语言
-coderecall search --information-request "Build pipeline entry points" --source-code-only --exclude-languages "shell,powershell"
 ```
 
 ## CLI 参数
@@ -39,7 +34,7 @@ coderecall search --information-request "Build pipeline entry points" --source-c
 | `--information-request <text>` | 是 | 自然语言描述代码功能/逻辑/行为 |
 | `--technical-terms <terms>` | 否 | 精准术语，逗号分隔。**仅在 100% 确定符号存在时使用** |
 | `--source-code-only` | 否 | 排除 docs(config) 类文件，仅搜索源码 |
-| `--include-languages <langs>` | 否 | 语言白名单，与 `--source-code-only` 互斥 |
+| `--include-languages <langs>` | 否 | 语言白名单，可与 `--source-code-only` 组合（取交集） |
 | `--exclude-languages <langs>` | 否 | 语言黑名单，可与 `--source-code-only` 组合 |
 | `--repo-path <path>` | 否 | 仓库根目录，默认当前目录 |
 
@@ -73,7 +68,7 @@ CodeRecall 将文件分为三类：
 | config | json, yaml, toml, xml | 配置 |
 
 - `--source-code-only`：排除 docs + config，保留 code
-- `--include-languages`：白名单，与 `--source-code-only` 互斥
+- `--include-languages`：白名单，可与 `--source-code-only` 组合（取交集）
 - `--exclude-languages`：黑名单，可与 `--source-code-only` 组合
 
 > 索引无需手动处理。`coderecall search` 入口自动调用 `ensureIndexed()`：首次全量索引、后续增量索引。仅当自动索引失败时才需人工介入。
@@ -83,7 +78,7 @@ CodeRecall 将文件分为三类：
 | 错误 | 正确 |
 |------|------|
 | 猜测符号填入 `--technical-terms` | 不确定就留空 |
-| 同时用 `--source-code-only` 和 `--include-languages` | 两者互斥，选其一 |
+| 同时用 `--source-code-only` 和 `--include-languages` | 两者可组合，取交集 |
 | 每次搜索前检查环境/索引 | 直接搜索，失败再排查 |
 
 ## 故障排查
@@ -123,4 +118,13 @@ coderecall doctor . --repair   # 修复孤儿记录
 ```bash
 coderecall doctor .                      # 索引健康检查
 coderecall feedback . --days 7 --top 10  # 检索反馈摘要
+```
+
+## 高级使用
+```bash
+# 限定语言
+coderecall search --information-request "Database migration logic" --include-languages "typescript,sql"
+
+# 组合过滤：源码中去掉脚本语言
+coderecall search --information-request "Build pipeline entry points" --source-code-only --exclude-languages "shell,powershell"
 ```

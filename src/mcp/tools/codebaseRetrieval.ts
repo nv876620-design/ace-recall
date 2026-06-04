@@ -72,13 +72,13 @@ export const codebaseRetrievalSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      'Quick filter: exclude docs/config languages (markdown/json/yaml/toml/xml). Mutually exclusive with include_languages.',
+      'Quick filter: exclude docs/config languages (markdown/json/yaml/toml/xml). Can be combined with include_languages (intersection).',
     ),
   include_languages: z
     .array(z.string())
     .optional()
     .describe(
-      "Language whitelist: only include specified languages (e.g., ['typescript', 'python']). Mutually exclusive with source_code_only. Unknown languages will cause validation error.",
+      "Language whitelist: only include specified languages (e.g., ['typescript', 'python']). When combined with source_code_only, the intersection is used. Unknown languages will cause validation error.",
     ),
   exclude_languages: z
     .array(z.string())
@@ -132,14 +132,9 @@ export interface LanguageFilterConfig {
  * @throws {Error} 参数冲突时抛出错误
  */
 export function validateLanguageFilterConflicts(config: LanguageFilterConfig): void {
-  const { source_code_only, include_languages, exclude_languages } = config;
+  const { include_languages, exclude_languages } = config;
 
-  // 规则 1: source_code_only 与 include_languages 互斥
-  if (source_code_only && include_languages && include_languages.length > 0) {
-    throw new Error('source_code_only 与 include_languages 参数互斥，不可同时使用');
-  }
-
-  // 规则 2: include_languages 与 exclude_languages 不能有交集
+  // include_languages 与 exclude_languages 不能有交集
   if (include_languages && exclude_languages) {
     const intersection = include_languages.filter((lang) => exclude_languages.includes(lang));
     if (intersection.length > 0) {
@@ -198,7 +193,11 @@ export function normalizeLanguageFilter(config: LanguageFilterConfig): string[] 
 
   let result: string[];
 
-  if (source_code_only) {
+  if (source_code_only && include_languages) {
+    // source_code_only + include_languages → 取交集，只保留同时属于源码语言和用户白名单的语言
+    const codeLangSet = new Set(getCodeLanguages());
+    result = include_languages.filter((lang) => codeLangSet.has(lang));
+  } else if (source_code_only) {
     // source_code_only: true → 转换为代码类语言白名单
     result = getCodeLanguages();
   } else if (include_languages) {

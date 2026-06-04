@@ -52,14 +52,12 @@ test('getLanguage 通过扩展名推断语言', () => {
 
 // ─── 参数冲突校验 ───
 
-test('source_code_only + include_languages 应报错', () => {
-  assert.throws(
-    () =>
-      validateLanguageFilterConflicts({
-        source_code_only: true,
-        include_languages: ['typescript'],
-      }),
-    /互斥/,
+test('source_code_only + include_languages 不再互斥，取交集通过', () => {
+  assert.doesNotThrow(() =>
+    validateLanguageFilterConflicts({
+      source_code_only: true,
+      include_languages: ['typescript'],
+    }),
   );
 });
 
@@ -133,6 +131,29 @@ test('source_code_only + exclude_languages 叠加过滤', () => {
 test('include_languages 直接透传', () => {
   const result = normalizeLanguageFilter({ include_languages: ['typescript', 'python'] });
   assert.deepEqual(result, ['typescript', 'python']);
+});
+
+test('source_code_only + include_languages 取交集', () => {
+  const result = normalizeLanguageFilter({
+    source_code_only: true,
+    include_languages: ['typescript', 'markdown'],
+  });
+  assert.ok(result);
+  // markdown 不是 code 语言，应被过滤掉
+  assert.ok(result.includes('typescript'));
+  assert.ok(!result.includes('markdown'));
+});
+
+test('source_code_only + include_languages + exclude_languages 三参数组合', () => {
+  const result = normalizeLanguageFilter({
+    source_code_only: true,
+    include_languages: ['typescript', 'python', 'shell'],
+    exclude_languages: ['shell'],
+  });
+  assert.ok(result);
+  assert.ok(result.includes('typescript'));
+  assert.ok(result.includes('python'));
+  assert.ok(!result.includes('shell'));
 });
 
 test('仅 exclude_languages 归一化为排除后的语言白名单', () => {
