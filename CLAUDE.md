@@ -16,7 +16,7 @@ pnpm build:release            # 正式发布编译（无 sourcemap）
 # Development
 pnpm dev                      # Watch 模式开发
 pnpm fmt                      # Biome 格式化并自动修复
-pnpm biome check ./src        # Biome 仅检查不修复（CI 用）
+pnpm exec -- biome check ./src  # Biome 仅检查不修复（CI 用）
 pnpm tsc --noEmit             # TypeScript 类型检查（CI 用）
 
 # Test — 全量回归
@@ -147,3 +147,10 @@ scanner/
 - 核心流程必须有中文注释
 - 环境变量通过 `src/config.ts` 统一读取，不直接读 `process.env`
 - CI 流水线: `biome check` → `tsc --noEmit` → `build` → `test`
+
+
+## 本地绑定
+```
+pnpm build
+pnpm link --global
+```
