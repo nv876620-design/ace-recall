@@ -147,6 +147,382 @@ function createMcpServer(): Server {
   return server;
 }
 
+function getPreferredHomeEnvFilePath() {
+  const home = process.env.HOME || process.env.USERPROFILE || '';
+  return path.join(home, '.coderecall', '.env');
+}
+
+function getDefaultEnvFilePath() {
+  return path.join(process.cwd(), '.env');
+}
+
+function getActiveEnvFilePath(): string {
+  const preferredHomeEnvPath = getPreferredHomeEnvFilePath();
+  const fallbackEnvPath = getDefaultEnvFilePath();
+  const localEnvPath = path.join(process.cwd(), '.env');
+
+  // Find the first existing candidate
+  if (fs.existsSync(localEnvPath)) return localEnvPath;
+  if (fs.existsSync(preferredHomeEnvPath)) return preferredHomeEnvPath;
+  if (fs.existsSync(fallbackEnvPath)) return fallbackEnvPath;
+
+  // Default to write path
+  const preferredDir = path.dirname(preferredHomeEnvPath);
+  try {
+    fs.mkdirSync(preferredDir, { recursive: true });
+    return preferredHomeEnvPath;
+  } catch {
+    return fallbackEnvPath;
+  }
+}
+
+function updateEnvFile(updates: Record<string, string>): void {
+  const filePath = getActiveEnvFilePath();
+  let content = '';
+  if (fs.existsSync(filePath)) {
+    content = fs.readFileSync(filePath, 'utf-8');
+  }
+
+  const lines = content.split('\n');
+  const keysToUpdate = new Set(Object.keys(updates));
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line && !line.startsWith('#')) {
+      const parts = line.split('=');
+      const key = parts[0].trim();
+      if (keysToUpdate.has(key)) {
+        lines[i] = `${key}=${updates[key]}`;
+        keysToUpdate.delete(key);
+      }
+    }
+  }
+
+  // Append new keys
+  for (const key of keysToUpdate) {
+    lines.push(`${key}=${updates[key]}`);
+  }
+
+  fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeRecall Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --input-bg: rgba(0, 0, 0, 0.3);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+    
+    header {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    
+    .tagline {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      margin-bottom: 30px;
+    }
+    
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .status-badge.configured {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .status-badge.missing {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    
+    .status-badge.active {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    
+    input {
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.2s ease;
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .status-label {
+      color: var(--text-muted);
+    }
+    
+    .status-val {
+      font-weight: 500;
+      font-family: monospace;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>CodeRecall Configuration</h1>
+      <p class="tagline">Manage Vector Database, Embedding, and Reranker Credentials</p>
+    </header>
+    
+    {{#if success}}
+    <div class="alert alert-success">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      </svg>
+      Configuration successfully updated and loaded in-memory!
+    </div>
+    {{/if}}
+    
+    <div class="card">
+      <div class="card-title">
+        <span>System Status</span>
+        <span class="status-badge active">Online</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Embedding Engine</span>
+        <span class="status-val">
+          {{#if hasEmbeddingKey}}
+          <span class="status-badge configured">Configured</span>
+          {{else}}
+          <span class="status-badge missing">Missing</span>
+          {{/if}}
+        </span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Reranker Engine</span>
+        <span class="status-val">
+          {{#if hasRerankKey}}
+          <span class="status-badge configured">Configured</span>
+          {{else}}
+          <span class="status-badge missing">Missing</span>
+          {{/if}}
+        </span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Workspace Path</span>
+        <span class="status-val">{{workspacePath}}</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Active Config File</span>
+        <span class="status-val">{{envFilePath}}</span>
+      </div>
+    </div>
+    
+    <form method="POST" action="/admin/configure" class="card">
+      <div class="card-title">API Credentials</div>
+      
+      <div class="grid">
+        <div class="form-group">
+          <label for="embeddings_api_keys">Embedding API Key(s)</label>
+          <input type="password" id="embeddings_api_keys" name="embeddings_api_keys" value="{{embeddingsApiKeys}}" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label for="embeddings_base_url">Embedding Base URL</label>
+          <input type="text" id="embeddings_base_url" name="embeddings_base_url" value="{{embeddingsBaseUrl}}" placeholder="https://api.siliconflow.cn/v1/embeddings" />
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="embeddings_model">Embedding Model</label>
+        <input type="text" id="embeddings_model" name="embeddings_model" value="{{embeddingsModel}}" placeholder="BAAI/bge-m3" />
+      </div>
+      
+      <div style="margin: 30px 0 10px 0; border-top: 1px solid var(--card-border);"></div>
+      
+      <div class="grid">
+        <div class="form-group">
+          <label for="rerank_api_keys">Rerank API Key(s)</label>
+          <input type="password" id="rerank_api_keys" name="rerank_api_keys" value="{{rerankApiKeys}}" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label for="rerank_base_url">Rerank Base URL</label>
+          <input type="text" id="rerank_base_url" name="rerank_base_url" value="{{rerankBaseUrl}}" placeholder="https://api.siliconflow.cn/v1/rerank" />
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="rerank_model">Rerank Model</label>
+        <input type="text" id="rerank_model" name="rerank_model" value="{{rerankModel}}" placeholder="BAAI/bge-reranker-v2-m3" />
+      </div>
+      
+      <button type="submit" class="btn" style="margin-top: 20px;">Save Configuration</button>
+    </form>
+  </div>
+</body>
+</html>`;
+
 /**
  * Tạo Express app với MCP endpoints
  */
@@ -157,6 +533,90 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   });
 
   const server = createMcpServer();
+
+  // Enable URL-encoded form parsing for admin config submissions
+  app.use(express.urlencoded({ extended: true }));
+
+  // Admin Configuration Dashboard UI
+  app.get('/admin', (req: Request, res: Response) => {
+    const success = req.query.success === 'true';
+    const hasEmbeddingKey = !!(process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here');
+    const hasRerankKey = !!(process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here');
+    const workspacePath = process.env.CODERECALL_WORKSPACE || process.cwd();
+    const envFilePath = getActiveEnvFilePath();
+
+    let html = ADMIN_HTML_TEMPLATE;
+
+    // Replace success alert block
+    if (success) {
+      html = html.replace('{{#if success}}', '').replace('{{/if}}', '');
+    } else {
+      html = html.replace(/\{\{#if success\}\}[\s\S]*?\{\{\/if\}\}/, '');
+    }
+
+    // Replace HasEmbeddingKey badge block
+    if (hasEmbeddingKey) {
+      html = html.replace(/\{\{#if hasEmbeddingKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/, '$1');
+    } else {
+      html = html.replace(/\{\{#if hasEmbeddingKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/, '$1');
+    }
+
+    // Replace HasRerankKey badge block
+    if (hasRerankKey) {
+      html = html.replace(/\{\{#if hasRerankKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/, '$1');
+    } else {
+      html = html.replace(/\{\{#if hasRerankKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/, '$1');
+    }
+
+    // Replace escaped config values
+    html = html
+      .replace(/\{\{embeddingsApiKeys\}\}/g, escapeHtml(process.env.EMBEDDINGS_API_KEYS || ''))
+      .replace(/\{\{embeddingsBaseUrl\}\}/g, escapeHtml(process.env.EMBEDDINGS_BASE_URL || ''))
+      .replace(/\{\{embeddingsModel\}\}/g, escapeHtml(process.env.EMBEDDINGS_MODEL || ''))
+      .replace(/\{\{rerankApiKeys\}\}/g, escapeHtml(process.env.RERANK_API_KEYS || ''))
+      .replace(/\{\{rerankBaseUrl\}\}/g, escapeHtml(process.env.RERANK_BASE_URL || ''))
+      .replace(/\{\{rerankModel\}\}/g, escapeHtml(process.env.RERANK_MODEL || ''))
+      .replace(/\{\{workspacePath\}\}/g, escapeHtml(workspacePath))
+      .replace(/\{\{envFilePath\}\}/g, escapeHtml(envFilePath));
+
+    res.send(html);
+  });
+
+  // Admin Configuration Save Action
+  app.post('/admin/configure', (req: Request, res: Response) => {
+    const {
+      embeddings_api_keys,
+      embeddings_base_url,
+      embeddings_model,
+      rerank_api_keys,
+      rerank_base_url,
+      rerank_model,
+    } = req.body;
+
+    const updates: Record<string, string> = {
+      EMBEDDINGS_API_KEYS: (embeddings_api_keys || '').trim(),
+      EMBEDDINGS_BASE_URL: (embeddings_base_url || '').trim(),
+      EMBEDDINGS_MODEL: (embeddings_model || '').trim(),
+      RERANK_API_KEYS: (rerank_api_keys || '').trim(),
+      RERANK_BASE_URL: (rerank_base_url || '').trim(),
+      RERANK_MODEL: (rerank_model || '').trim(),
+    };
+
+    // Update in-memory configurations instantly
+    for (const [key, value] of Object.entries(updates)) {
+      process.env[key] = value;
+    }
+
+    // Save configurations back to the active environment config file
+    try {
+      updateEnvFile(updates);
+      logger.info('HTTP: Configurations updated via Admin Panel dashboard');
+      res.redirect('/admin?success=true');
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'HTTP: Saving config to file failed');
+      res.status(500).send(`Configuration Save Error: ${(err as Error).message}`);
+    }
+  });
 
   // Log ALL requests for debugging
   app.use((req: Request, res: Response, next: any) => {
