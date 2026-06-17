@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CodeRecall 是一个为 AI 代码助手设计的语义检索引擎，采用混合搜索（向量 + 词法）、智能上下文扩展和 Token 感知打包策略。通过 CLI 和 MCP Server 两种方式提供服务。
+CodeRecall 是一个为 AI 代码助手设计的语义检索引擎，采用混合搜索（向量 + 词法）、智能上下文扩展和 Token 感知打包策略。通过 CLI、MCP Server (stdio) 和 MCP HTTP Server 三种方式提供服务。
 
 ## Development Commands
 
@@ -35,7 +35,8 @@ pnpm benchmark:tune           # 自动调参（RRF 回放）
 coderecall init            # 初始化配置文件 (~/.coderecall/.env)
 coderecall index [path]    # 索引代码库（-f 强制重建）
 coderecall search          # 本地检索
-coderecall mcp             # 启动 MCP 服务端
+coderecall mcp             # 启动 MCP 服务端 (stdio)
+coderecall mcp-http        # 启动 MCP HTTP 服务端 (默认 :3000)
 coderecall doctor .        # 索引一致性审计（--repair 自动修复）
 coderecall feedback .      # 隐式反馈闭环摘要（--days 7 --top 10）
 coderecall tune <dataset>  # 离线自动调参（--target mrr --k 1,3,5）
@@ -77,7 +78,7 @@ pnpm workspace monorepo，根目录 `pnpm-workspace.yaml` 声明 `packages/*`。
 
 | Module | Location | Responsibility |
 |--------|----------|----------------|
-| **CLI Entry** | `src/index.ts` | cac CLI 入口，6 个命令: init/index/search/mcp/doctor/feedback/tune |
+| **CLI Entry** | `src/index.ts` | cac CLI 入口，7 个命令: init/index/search/mcp/mcp-http/doctor/feedback/tune |
 | **Config** | `src/config.ts` | 环境变量加载 + 导出型 getter，必须最先 import |
 | **SearchService** | `src/search/SearchService.ts` | 流水线编排：召回 → 融合 → Rerank → 扩展 → 打包 |
 | **GraphExpander** | `src/search/GraphExpander.ts` | E1/E2/E3 三阶段扩展，衰减系数控制上下文相关性 |
@@ -87,7 +88,8 @@ pnpm workspace monorepo，根目录 `pnpm-workspace.yaml` 声明 `packages/*`。
 | **VectorStore** | `src/vectorStore/index.ts` | LanceDB 适配层，表按 `projectId` 隔离 |
 | **Database** | `src/db/index.ts` | SQLite + FTS5 元数据和全文索引 |
 | **Indexer** | `src/indexer/index.ts` | 自愈索引编排：hash 变化检测 → chunk → embedding → 写入 |
-| **MCP Server** | `src/mcp/server.ts` | 单工具 `codebase-retrieval`，首次查询自动触发索引 |
+| **MCP Server (stdio)** | `src/mcp/server.ts` | StdioServerTransport，单工具 `codebase-retrieval` |
+| **MCP Server (HTTP)** | `src/mcp/httpServer.ts` | Express + StreamableHTTPServerTransport，hỗ trợ HTTP/REST API |
 | **Scanner** | `src/scanner/index.ts` | scan() 编排 crawler → filter → processor，支持进度回调 |
 
 ### Scanner 流水线

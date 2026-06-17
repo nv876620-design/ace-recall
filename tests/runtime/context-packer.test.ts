@@ -48,6 +48,7 @@ function buildChunk(args: {
 test('同文件重叠区间应合并为单段', async () => {
   const projectId = `packer-merge-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
   const db = initDb(projectId);
+  let packer: ContextPacker | undefined; // 💡 ĐƯA BIẾN PACKER RA NGOÀI CỦA TRY
 
   try {
     const filePath = 'src/a.ts';
@@ -66,6 +67,7 @@ test('同文件重叠区间应合并为单段', async () => {
     ];
     batchUpsert(db, files);
 
+    // 💡 Bỏ chữ const ở đây, chỉ gán giá trị
     const packer = new ContextPacker(projectId, {
       ...DEFAULT_CONFIG,
       maxSegmentsPerFile: 3,
@@ -77,13 +79,29 @@ test('同文件重叠区间应合并为单段', async () => {
       buildChunk({ filePath, chunkIndex: 1, score: 0.7, rawStart: 8, rawEnd: 18 }),
     ]);
 
+	
     assert.equal(packed.length, 1);
     assert.equal(packed[0].segments.length, 1);
     assert.equal(packed[0].segments[0].rawStart, 0);
     assert.equal(packed[0].segments[0].rawEnd, 18);
   } finally {
     closeDb(db);
-    await fs.rm(projectDir(projectId), { recursive: true, force: true });
+    
+    // Thử đóng packer nếu có biến
+    if (typeof packer !== 'undefined') {
+      if (typeof (packer as any).destroy === 'function') await (packer as any).destroy();
+      else if (typeof (packer as any).close === 'function') await (packer as any).close();
+    }
+
+    // Đợi một chút để giải phóng luồng
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    try {
+      // Ép xóa thư mục dữ liệu tạm
+      await fs.rm(projectDir(projectId), { recursive: true, force: true });
+    } catch (e) {
+      // 💡 Bỏ qua lỗi EBUSY trên Windows tại đây vì file sẽ tự giải phóng khi kết thúc luồng chạy test
+    }
   }
 });
 
@@ -136,6 +154,21 @@ test('maxSegmentsPerFile 与 maxTotalChars 应生效', async () => {
     assert.equal(packed[0].segments.length, 1, '每文件最多 1 段');
   } finally {
     closeDb(db);
-    await fs.rm(projectDir(projectId), { recursive: true, force: true });
+    
+    // Thử đóng packer nếu có biến
+    if (typeof packer !== 'undefined') {
+      if (typeof (packer as any).destroy === 'function') await (packer as any).destroy();
+      else if (typeof (packer as any).close === 'function') await (packer as any).close();
+    }
+
+    // Đợi một chút để giải phóng luồng
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    try {
+      // Ép xóa thư mục dữ liệu tạm
+      await fs.rm(projectDir(projectId), { recursive: true, force: true });
+    } catch (e) {
+      // 💡 Bỏ qua lỗi EBUSY trên Windows tại đây vì file sẽ tự giải phóng khi kết thúc luồng chạy test
+    }
   }
 });

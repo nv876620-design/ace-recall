@@ -17,6 +17,26 @@ import { closeAllVectorStores } from '../../src/vectorStore/index.js';
 const TEST_PROJECT = 'test-batch-index-resilience';
 const TEST_DIR = getProjectDataDir(TEST_PROJECT);
 
+// 检查是否有有效的 API key（匹配 config.ts 的验证逻辑）
+function hasValidEmbeddingKey(): boolean {
+  const DEFAULT_API_KEY_PLACEHOLDER = 'your-api-key-here';
+  const normalizeKey = (value: string | undefined): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === DEFAULT_API_KEY_PLACEHOLDER) return null;
+    return trimmed;
+  };
+
+  const singleKey = normalizeKey(process.env.EMBEDDINGS_API_KEY);
+  const multiKeys = process.env.EMBEDDINGS_API_KEYS
+    ? process.env.EMBEDDINGS_API_KEYS.split(',')
+        .map((k) => normalizeKey(k))
+        .filter((k) => k !== null)
+    : [];
+
+  return singleKey !== null || multiKeys.length > 0;
+}
+
 function makeChunk(index: number, filePath: string): ProcessedChunk {
   return {
     displayCode: `// chunk ${index} from ${filePath}`,
@@ -36,7 +56,7 @@ function makeChunk(index: number, filePath: string): ProcessedChunk {
 
 test(
   '真实 LanceDB 冒烟: 分批索引成功后 files 元数据收敛',
-  { skip: !process.env.EMBEDDINGS_API_KEY && !process.env.EMBEDDINGS_API_KEYS },
+  { skip: !hasValidEmbeddingKey() },
   async () => {
     // 此测试需要真实 embedding API，默认 skip
     // 设置环境变量后运行: EMBEDDINGS_API_KEY=xxx tsx tests/runtime/batch-index-resilience-integration.test.ts
