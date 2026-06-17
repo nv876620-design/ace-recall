@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 # Install build dependencies for native node modules (tree-sitter, better-sqlite3)
 RUN apt-get update && \
@@ -24,7 +24,7 @@ COPY . .
 RUN pnpm run build
 
 # Runtime stage
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 # Install runtime dependencies
 RUN apt-get update && \
