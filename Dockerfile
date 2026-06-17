@@ -15,8 +15,8 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY scripts ./scripts
 
-# Install dependencies including devDependencies (needed for compilation)
-RUN pnpm install --frozen-lockfile
+# Install dependencies using hoisted node-linker so node_modules is self-contained (no symlinks)
+RUN pnpm install --frozen-lockfile --config.node-linker=hoisted
 
 # Copy source code
 COPY . .
