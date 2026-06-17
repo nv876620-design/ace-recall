@@ -1,20 +1,21 @@
 packages:
   - 'packages/*'
 allowBuilds:
-  better-sqlite3: false
-  esbuild: false
-  tree-sitter: false
-  tree-sitter-c: false
-  tree-sitter-c-sharp: false
-  tree-sitter-cli: false
-  tree-sitter-cpp: false
-  tree-sitter-go: false
-  tree-sitter-java: false
-  tree-sitter-javascript: false
-  tree-sitter-kotlin: false
-  tree-sitter-php: false
-  tree-sitter-python: false
-  tree-sitter-ruby: false
-  tree-sitter-rust: false
-  tree-sitter-swift: false
-  tree-sitter-typescript: false
+  better-sqlite3: true
+  esbuild: true
+  tree-sitter: true
+  tree-sitter-c: true
+  tree-sitter-c-sharp: true
+  tree-sitter-cli: true
+  tree-sitter-cpp: true
+  tree-sitter-go: true
+  tree-sitter-java: true
+  tree-sitter-javascript: true
+  tree-sitter-kotlin: true
+  tree-sitter-php: true
+  tree-sitter-python: true
+  tree-sitter-ruby: true
+  tree-sitter-rust: true
+  tree-sitter-swift: true
+  tree-sitter-typescript: true
+
