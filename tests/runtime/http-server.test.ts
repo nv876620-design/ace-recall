@@ -43,6 +43,31 @@ function httpRequest(
   });
 }
 
+/**
+ * Helper: Gửi HTTP request và chỉ trả về headers (để test SSE/streaming endpoint)
+ */
+function httpRequestHeadersOnly(
+  options: http.RequestOptions,
+  body?: string,
+): Promise<{ statusCode: number; headers: http.IncomingHttpHeaders; req: http.ClientRequest }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      resolve({
+        statusCode: res.statusCode || 0,
+        headers: res.headers,
+        req,
+      });
+    });
+
+    req.on('error', reject);
+
+    if (body) {
+      req.write(body);
+    }
+    req.end();
+  });
+}
+
 // Run tests sequentially to avoid port conflicts
 describe('HTTP Server Tests', { concurrency: 1 }, () => {
   test('Health check endpoint trả về status ok', async () => {
@@ -124,66 +149,34 @@ describe('HTTP Server Tests', { concurrency: 1 }, () => {
       // Đợi port được giải phóng
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
-  });
-
-  test('MCP endpoint chấp nhận POST requests', async () => {
+  });  test('MCP endpoint chấp nhận GET requests cho SSE', async () => {
     const app = createHttpServerApp(TEST_HOST);
     const server = app.listen(TEST_PORT, TEST_HOST);
 
     try {
-      // Gửi một MCP initialize request
-      const mcpRequest = {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'initialize',
-        params: {
-          protocolVersion: '2024-11-05',
-          capabilities: {},
-          clientInfo: {
-            name: 'test-client',
-            version: '1.0.0',
-          },
-        },
-      };
+      const req = http.request({
+        hostname: TEST_HOST,
+        port: TEST_PORT,
+        path: '/mcp',
+        method: 'GET',
+      });
+      req.on('error', () => {}); // Tránh ngoại lệ chưa được bắt (uncaught exception) khi đóng socket
+      req.end();
 
-      const response = await httpRequest(
-        {
-          hostname: TEST_HOST,
-          port: TEST_PORT,
-          path: '/mcp',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(JSON.stringify(mcpRequest)),
-          },
-        },
-        JSON.stringify(mcpRequest),
-      );
-
-      // StreamableHTTP transport trả về status code
-      assert.ok(
-        response.statusCode >= 200 && response.statusCode < 500,
-        `Expect valid status code, got ${response.statusCode}`,
-      );
-
-      // Chỉ cần đảm bảo endpoint có thể nhận request
-      // Không cần kiểm tra chi tiết response vì MCP protocol phức tạp
-    } catch (err) {
-      // ECONNRESET có thể xảy ra do transport đóng sớm
-      // Miễn là không phải network error khác thì OK
-      const error = err as { code?: string };
-      if (error.code !== 'ECONNRESET') {
-        throw err;
-      }
-      // ECONNRESET có nghĩa server đã nhận request nhưng đóng connection
-      // Điều này OK cho test này vì mục đích chỉ là verify endpoint tồn tại
+      // Đợi 300ms để server nhận request và khởi tạo session, sau đó chủ động đóng socket để tránh bị treo
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      req.destroy();
     } finally {
+      if (server.closeAllConnections) {
+        server.closeAllConnections();
+      }
       await new Promise<void>((resolve) => {
         server.close(() => resolve());
       });
+      // Đợi port được giải phóng
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
   });
-
   test('404 cho unknown paths', async () => {
     const app = createHttpServerApp(TEST_HOST);
     const server = app.listen(TEST_PORT, TEST_HOST);

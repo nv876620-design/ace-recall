@@ -10,7 +10,7 @@ import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import type { Express, Request, Response } from 'express';
+import express, { type Express, type Request, type Response } from 'express';
 import { logger } from '../utils/logger.js';
 import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
 
