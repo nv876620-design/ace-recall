@@ -976,13 +976,19 @@ Mock search results would appear here with relevant code snippets.`;
   });
 
   // MCP endpoint - sử dụng StreamableHTTP transport
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined, // stateless mode
+  });
+  server.connect(transport).catch((err) => {
+    logger.error({ error: (err as Error).message }, 'HTTP: Kết nối MCP transport thất bại');
+  });
+
   app.use('/mcp', async (req: Request, res: Response) => {
     logger.debug({ method: req.method, path: req.path }, 'HTTP: MCP request nhận được');
     try {
-      const transport = new StreamableHTTPServerTransport(req, res);
-      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
     } catch (err) {
-      logger.error({ error: (err as Error).message }, 'HTTP: Kết nối MCP transport thất bại');
+      logger.error({ error: (err as Error).message }, 'HTTP: MCP handleRequest thất bại');
       if (!res.headersSent) {
         res.status(500).json({ error: 'Internal server error' });
       }
