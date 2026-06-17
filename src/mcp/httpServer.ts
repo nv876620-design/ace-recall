@@ -4,11 +4,13 @@
  * Cung cấp MCP server qua HTTP/SSE thay vì stdio
  */
 
-import type { Express, Request, Response } from 'express';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import type { Express, Request, Response } from 'express';
 import { logger } from '../utils/logger.js';
 import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
 
@@ -56,7 +58,7 @@ Capabilities:
         information_request: {
           type: 'string',
           description:
-            "The SEMANTIC GOAL. Describe the functionality, logic, or behavior you are looking for in full natural language sentences.",
+            'The SEMANTIC GOAL. Describe the functionality, logic, or behavior you are looking for in full natural language sentences.',
         },
         technical_terms: {
           type: 'array',
@@ -540,8 +542,12 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   // Admin Configuration Dashboard UI
   app.get('/admin', (req: Request, res: Response) => {
     const success = req.query.success === 'true';
-    const hasEmbeddingKey = !!(process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here');
-    const hasRerankKey = !!(process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here');
+    const hasEmbeddingKey = !!(
+      process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here'
+    );
+    const hasRerankKey = !!(
+      process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here'
+    );
     const workspacePath = process.env.CODERECALL_WORKSPACE || process.cwd();
     const envFilePath = getActiveEnvFilePath();
 
@@ -556,16 +562,28 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
     // Replace HasEmbeddingKey badge block
     if (hasEmbeddingKey) {
-      html = html.replace(/\{\{#if hasEmbeddingKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/, '$1');
+      html = html.replace(
+        /\{\{#if hasEmbeddingKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/,
+        '$1',
+      );
     } else {
-      html = html.replace(/\{\{#if hasEmbeddingKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/, '$1');
+      html = html.replace(
+        /\{\{#if hasEmbeddingKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/,
+        '$1',
+      );
     }
 
     // Replace HasRerankKey badge block
     if (hasRerankKey) {
-      html = html.replace(/\{\{#if hasRerankKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/, '$1');
+      html = html.replace(
+        /\{\{#if hasRerankKey\}\}([\s\S]*?)\{\{else\}\}[\s\S]*?\{\{\/if\}\}/,
+        '$1',
+      );
     } else {
-      html = html.replace(/\{\{#if hasRerankKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/, '$1');
+      html = html.replace(
+        /\{\{#if hasRerankKey\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/,
+        '$1',
+      );
     }
 
     // Replace escaped config values
@@ -620,12 +638,15 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
   // Log ALL requests for debugging
   app.use((req: Request, res: Response, next: any) => {
-    logger.info({
-      method: req.method,
-      url: req.url,
-      headers: req.headers,
-      body: req.method === 'POST' ? req.body : undefined
-    }, 'HTTP: Incoming request');
+    logger.info(
+      {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.method === 'POST' ? req.body : undefined,
+      },
+      'HTTP: Incoming request',
+    );
     next();
   });
 
@@ -679,7 +700,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   app.post('/augment/codebase-checkpoint', (req: Request, res: Response) => {
     logger.info({ body: req.body }, 'HTTP: /augment/codebase-checkpoint called');
     res.json({
-      checkpoint_id: 'local-' + Date.now(),
+      checkpoint_id: `local-${Date.now()}`,
       status: 'ok',
     });
   });
@@ -693,7 +714,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
           type: 'codebase',
           status: 'ready',
           name: 'CodeRecall Local Index',
-        }
+        },
       ],
       indexing_complete: true,
     });
@@ -705,11 +726,14 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
       const { query, workspace_path, repo_path } = req.body;
       logger.info({ query, workspace_path, repo_path }, 'HTTP: /search-external-sources called');
 
-      const repoPath = repo_path || workspace_path || process.env.CODERECALL_WORKSPACE || process.cwd();
+      const repoPath =
+        repo_path || workspace_path || process.env.CODERECALL_WORKSPACE || process.cwd();
 
       // Check if API keys are configured
-      const hasEmbeddingKey = process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here';
-      const hasRerankKey = process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here';
+      const hasEmbeddingKey =
+        process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here';
+      const hasRerankKey =
+        process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here';
 
       if (!hasEmbeddingKey || !hasRerankKey) {
         res.json({ results: [], status: 'ok' });
@@ -737,7 +761,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
           {
             type: 'codebase',
             content: formatted_retrieval,
-          }
+          },
         ],
         status: 'ok',
       });
@@ -751,7 +775,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   app.post('/checkpoint-blobs', (req: Request, res: Response) => {
     logger.info({ body: req.body }, 'HTTP: /checkpoint-blobs called');
     res.json({
-      checkpoint_id: 'local-' + Date.now(),
+      checkpoint_id: `local-${Date.now()}`,
       status: 'ok',
       blobs_count: 0,
     });
@@ -797,7 +821,8 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
     logger.info({ body: req.body }, 'HTTP: /chat-stream called');
     res.status(200).json({
       status: 'ok',
-      message: 'CodeRecall MCP local mode - chat-stream not supported. Use BYOK model provider instead.',
+      message:
+        'CodeRecall MCP local mode - chat-stream not supported. Use BYOK model provider instead.',
     });
   });
 
@@ -846,7 +871,11 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
         for (const turn of dialog) {
           if (Array.isArray(turn.request_nodes)) {
             for (const node of turn.request_nodes) {
-              if (node && node.ide_state_node && Array.isArray(node.ide_state_node.workspace_folders)) {
+              if (
+                node &&
+                node.ide_state_node &&
+                Array.isArray(node.ide_state_node.workspace_folders)
+              ) {
                 const folder = node.ide_state_node.workspace_folders[0];
                 if (folder && folder.folder_root) {
                   repoPath = String(folder.folder_root);
@@ -864,10 +893,9 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
         if (Array.isArray(blobs.added_blobs) && blobs.added_blobs.length > 0) {
           const firstBlob = blobs.added_blobs[0];
           if (typeof firstBlob === 'object' && firstBlob.path) {
-            const path = require('path');
             const fullPath = String(firstBlob.path);
             // Extract directory from file path
-            const parts = fullPath.split(/[\/\\]/);
+            const parts = fullPath.split(/[/\\]/);
             // Remove filename and go up to likely workspace root
             repoPath = parts.slice(0, -2).join(path.sep);
           }
@@ -879,20 +907,32 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
         repoPath = process.cwd();
       }
 
-      logger.info({
-        information_request,
-        repoPath,
-        source: repo_path ? 'request.repo_path' :
-                workspace_path ? 'request.workspace_path' :
-                nodes ? 'nodes.ide_state' :
-                dialog ? 'dialog.ide_state' :
-                process.env.CODERECALL_WORKSPACE ? 'env.CODERECALL_WORKSPACE' :
-                blobs ? 'blobs.path_heuristic' : 'cwd'
-      }, 'HTTP: agents/codebase-retrieval called');
+      logger.info(
+        {
+          information_request,
+          repoPath,
+          source: repo_path
+            ? 'request.repo_path'
+            : workspace_path
+              ? 'request.workspace_path'
+              : nodes
+                ? 'nodes.ide_state'
+                : dialog
+                  ? 'dialog.ide_state'
+                  : process.env.CODERECALL_WORKSPACE
+                    ? 'env.CODERECALL_WORKSPACE'
+                    : blobs
+                      ? 'blobs.path_heuristic'
+                      : 'cwd',
+        },
+        'HTTP: agents/codebase-retrieval called',
+      );
 
       // Check if API keys are configured
-      const hasEmbeddingKey = process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here';
-      const hasRerankKey = process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here';
+      const hasEmbeddingKey =
+        process.env.EMBEDDINGS_API_KEYS && process.env.EMBEDDINGS_API_KEYS !== 'your-api-key-here';
+      const hasRerankKey =
+        process.env.RERANK_API_KEYS && process.env.RERANK_API_KEYS !== 'your-api-key-here';
 
       if (!hasEmbeddingKey || !hasRerankKey) {
         // Mock response when API keys not configured
