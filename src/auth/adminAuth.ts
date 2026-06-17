@@ -37,11 +37,11 @@ export function verifyAdminPassword(providedPassword: string, storedPassword: st
  * Get admin auth config from environment
  */
 export function getAdminAuthConfig(): AdminAuthConfig {
-  const password = process.env.ACE_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+  const password = process.env.ACE_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'admin';
   
   return {
     password,
-    enabled: !!password,
+    enabled: true,
   };
 }
 

@@ -1,196 +1,126 @@
-# Awesome Context Engineering (ACE)
+# 🧠 Awesome Context Engineering (ACE)
 
-> A powerful context weaving tool for AI agents with advanced code intelligence
+> **ACE** is a next-generation semantic retrieval engine and Context-Weaving MCP Server designed specifically for AI Coding Agents. By fusing Vector search and AST-based Lexical search, ACE builds high-precision, token-efficient context packages to supercharge AI developer workflows.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20%20%3C24-brightgreen)](https://nodejs.org/)
 
+---
+
+## 📖 Table of Contents
+- [🚀 Quick Start](#-quick-start)
+- [✨ Core Features](#-core-features)
+- [🌐 Secure Web UI & Admin Dashboard](#-secure-web-ui--admin-dashboard)
+- [🛠️ CLI Command Reference](#️-cli-command-reference)
+- [🔌 Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
+- [🏗️ Pipeline Architecture](#️-pipeline-architecture)
+- [🔧 Configuration & Environment Variables](#-configuration--environment-variables)
+- [📄 License & Credits](#-license--credits)
+
+---
+
 ## 🚀 Quick Start
 
-```bash
-# Install globally
-npm install -g @nv876620-design/ace-recall
-
-# Or use with npx
-npx @nv876620-design/ace-recall
-
-# Initialize configuration
-ace-recall init
-
-# Index your codebase
-ace-recall index .
-
-# Start MCP server
-ace-recall mcp
-
-# Start HTTP server with Web UI
-ace-recall mcp-http --port 6699
-```
-
-## ✨ Features
-
-### Core Capabilities
-- 🔍 **Semantic Code Search** - Find code by meaning via embeddings
-- 🧠 **Hybrid Retrieval** - Vector search + Full-text search (BM25) with RRF fusion
-- 📊 **AST-Based Chunking** - Tree-sitter semantic splitting for 12+ languages
-- 🎯 **Smart Context Expansion** - Neighbor chunks, breadcrumb completion, import resolution
-- 🔄 **Incremental Indexing** - Fast updates with change detection
-- 🌐 **MCP Integration** - Works with Claude Desktop and other AI agents
-
-### NEW: Developer Productivity Features (v0.2.0)
-
-#### 🤖 AI-Powered Commit Messages
-Generate meaningful commit messages automatically:
-```bash
-git add .
-ace-recall git-msg --style conventional
-```
-
-#### 🔧 Automatic Task Detection
-Discover all runnable tasks in your project:
-```bash
-ace-recall tasks
-```
-
-#### 🎯 Field-Qualified Search
-Filter search results with precision:
-```bash
-# Search for specific types of code
-ace-recall search-context \
-  --information-request "authentication logic kind:function lang:typescript"
-```
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js >= 20 and < 24
-- Git (for version control features)
-
-### Global Installation
+### 1. Installation
+Install the CLI tool globally:
 ```bash
 npm install -g @nv876620-design/ace-recall
 ```
 
-### Usage in Projects
+### 2. Initialization
+Setup the environment configuration file:
 ```bash
-# Initialize config
 ace-recall init
-
-# Index your codebase
-ace-recall index /path/to/project
-
-# Search for code
-ace-recall search-context \
-  --project-path /path/to/project \
-  --information-request "user authentication"
 ```
+This initializes a configuration template under `~/.coderecall/.env`.
 
-## 🔧 Configuration
-
-ACE uses environment variables for API keys. Create a `.env` file:
-
+### 3. Add API Keys
+Open `~/.coderecall/.env` and configure your API keys (SiliconFlow, Jina, OpenAI, etc.):
 ```env
-# Embedding API (required)
-RERANK_BASE_URL=https://api.siliconflow.cn/v1
-RERANK_API_KEY=your-api-key-here
-
-# Admin password for Web UI (optional)
-ACE_ADMIN_PASSWORD=your-secure-password
-
-# Token secret for API authentication (optional)
-ACE_TOKEN_SECRET=your-secret-key
+EMBEDDINGS_API_KEYS=your-embedding-key-1,your-embedding-key-2
+RERANK_API_KEYS=your-reranker-key-here
+ACE_ADMIN_PASSWORD=admin
 ```
 
-## 🌐 Web UI
-
-Start the HTTP server with Web UI:
-
+### 4. Index a Codebase
+Run the crawler and build the semantic vector index:
 ```bash
-ace-recall mcp-http --port 6699 --bind 0.0.0.0
-```
-
-Access at: http://localhost:6699
-
-### Authentication
-- Default admin login required
-- Set password via `ACE_ADMIN_PASSWORD` environment variable
-- Generate API tokens for programmatic access
-
-## 🛠️ Commands
-
-### Indexing
-```bash
-# Index current directory
 ace-recall index .
-
-# Force full re-index
-ace-recall index . --force
-
-# Index with custom chunk size
-ace-recall index . --chunk-size 1024
 ```
 
-### Search
+### 5. Launch the Web UI & MCP Server
+Start the HTTP admin portal (running on port `9988` by default):
 ```bash
-# Basic search
-ace-recall search-context \
-  --information-request "database connection"
-
-# With filters
-ace-recall search-context \
-  --information-request "API handlers kind:function path:src/api"
-
-# Specify project
-ace-recall search-context \
-  --project-path /path/to/project \
-  --information-request "error handling"
+ace-recall mcp-http --port 9988
 ```
 
-### Git Integration
-```bash
-# Generate commit message
-ace-recall git-msg
+---
 
-# With specific style
-ace-recall git-msg --style conventional
-ace-recall git-msg --style simple
-ace-recall git-msg --style detailed
+## ✨ Core Features
 
-# Without body
-ace-recall git-msg --no-body
-```
+### 🔍 1. Hybrid Retrieval & RRF Fusion
+Fuses **Dense Vector Embeddings** (e.g., SiliconFlow, OpenAI, Jina) with **FTS5 Lexical Search** (BM25) using **Reciprocal Rank Fusion (RRF)**. Resolves semantic intents and exact keyword matching simultaneously.
 
-### Task Management
-```bash
-# Detect tasks
-ace-recall tasks
+### 📊 2. AST-Based Semantic Chunking
+Parses files into semantic abstract syntax tree nodes using **Tree-sitter** for 12+ programming languages. Respects logical scopes (classes, functions, methods) to prevent code truncation.
 
-# Detect in specific directory
-ace-recall tasks /path/to/project
-```
+### 🧠 3. Smart Context Expansion (E1 / E2 / E3)
+- **E1 (Neighbor Hops)**: Extracts adjacent chunks within the same source file.
+- **E2 (Breadcrumbs)**: Restores parent context scopes (e.g., namespace or class declarations).
+- **E3 (Import Resolution)**: Parses dependencies and references across TypeScript, Python, Go, Rust, Java, Kotlin, PHP, Ruby, Swift, Dart, and C/C++.
 
-### MCP Server
-```bash
-# Start MCP server (stdio)
-ace-recall mcp
+### 🤖 4. AI-Powered Developer Tooling
+- **Commit Messages**: Analyzes `git diff` and automatically generates Conventional Commits:
+  ```bash
+  git add .
+  ace-recall git-msg --style conventional
+  ```
+- **Task Detection**: Automatically discovers tasks defined in configuration files (npm scripts, Makefile, docker-compose, taskfile, etc.):
+  ```bash
+  ace-recall tasks
+  ```
 
-# Start HTTP server
-ace-recall mcp-http --port 6699
-```
+---
 
-## 🔌 MCP Integration
+## 🌐 Secure Web UI & Admin Dashboard
 
-### Claude Desktop Configuration
+ACE features a premium dark-themed admin dashboard (Glassmorphism layout with smooth transitions) accessible at `http://127.0.0.1:9988`:
 
-Add to your Claude Desktop config:
+- **🔒 Password Protection**: Secures dashboard operations with password authentication (defaults to `admin` if not set).
+- **👁️ API Key Masking**: Automatically replaces active keys with masking characters (`*`) for security.
+- **📁 Directory Browser**: Browse and pick `Workspace Path` using a built-in visual folder browser.
+- **📈 System Monitoring**: Track server uptime, environment configurations, and active MCP status instantly.
 
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+---
 
+## 🛠️ CLI Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `ace-recall init` | Creates the global `.env` file template under `~/.coderecall/.env` |
+| `ace-recall index [path]` | Scans and indexes the target codebase directory (use `-f` to force rebuild) |
+| `ace-recall search` | Performs interactive command-line searches on your indexed codebases |
+| `ace-recall tasks [path]` | Automatically discovers runnable tasks and commands in the workspace |
+| `ace-recall git-msg` | Generates a commit message using the current staged Git changes |
+| `ace-recall mcp` | Starts the stdio-based MCP Server for IDE clients |
+| `ace-recall mcp-http` | Runs the HTTP Server including the Web UI and MCP SSE transport portal |
+| `ace-recall doctor [path]` | Checks consistency between FTS and Vector indices, with optional `--repair` |
+
+---
+
+## 🔌 Model Context Protocol (MCP) Integration
+
+### Claude Desktop Integration
+To use ACE as an MCP server with Claude Desktop, edit your configuration:
+
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+Add the following config block:
 ```json
 {
   "mcpServers": {
-    "ace-recall": {
+    "awesome-context-engineering": {
       "command": "ace-recall",
       "args": ["mcp"]
     }
@@ -198,74 +128,52 @@ Add to your Claude Desktop config:
 }
 ```
 
-### Available MCP Tools
-- `codebase-retrieval` - Search codebase semantically
-- `file-retrieval` - Retrieve specific files
-- `generate-commit-message` - Generate AI commit messages
-- `detect-tasks` - Detect runnable tasks
-
-## 📚 Documentation
-
-- [Field-Qualified Search Guide](docs/FIELD_QUALIFIED_SEARCH.md)
-- [New Features Guide](docs/QUICK_START_NEW_FEATURES.md)
-- [Implementation Report](docs/FINAL_IMPLEMENTATION_REPORT.md)
-- [Inspiration Sources](docs/CROSS_REPO_INSPIRATION_SUMMARY.md)
-
-## 🎯 Use Cases
-
-### For AI Coding Agents
-- Provide accurate code context for Claude, GPT-4, and other AI agents
-- Semantic search understands intent, not just keywords
-- Smart context expansion reduces hallucinations
-
-### For Developers
-- Generate meaningful commit messages automatically
-- Discover tasks across different build systems
-- Search code with precision using field filters
-
-### For Teams
-- Consistent code understanding across AI agents
-- Self-hosted with no cloud dependencies
-- Token-based API access for automation
-
-## 🏗️ Architecture
-
-```
-ACE Recall
-├── Indexing Pipeline
-│   ├── File Scanner (fdir + ignore patterns)
-│   ├── AST Parser (Tree-sitter)
-│   ├── Semantic Chunker
-│   └── Embedding Generator (BAAI/bge-m3)
-├── Storage Layer
-│   ├── SQLite (metadata + FTS)
-│   └── LanceDB (vector embeddings)
-├── Search Pipeline
-│   ├── Hybrid Retrieval (Vector + BM25)
-│   ├── RRF Fusion
-│   ├── Reranking (BAAI/bge-reranker-v2-m3)
-│   └── Context Expansion (Graph + Import)
-└── Interfaces
-    ├── CLI Commands
-    ├── MCP Server (stdio)
-    ├── HTTP Server + Web UI
-    └── API Endpoints
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details
-
-## 🙏 Credits
-
-- Original CodeRecall by alistar.max
-- Enhanced with features inspired by nullmastermind's work
-- Built with TypeScript, LanceDB, Tree-sitter, and MCP SDK
+### Available Tools
+1. `codebase-retrieval`: Semantically query the codebase.
+2. `file-retrieval`: Read and retrieve files.
+3. `generate-commit-message`: Generate commit messages from current staged diffs.
+4. `detect-tasks`: Auto-detect build scripts and workspace tasks.
 
 ---
 
-**Awesome Context Engineering** - Making AI agents smarter with better code context 🚀
+## 🏗️ Pipeline Architecture
+
+```
+[Index Pipeline]
+Crawler (gitignore-aware) ➔ Filter (extension whitelists) ➔ AST Semantic Splitter ➔ Embeddings Generator ➔ LanceDB (Vector) + SQLite (FTS5)
+
+[Search Pipeline]
+User Query ➔ Hybrid Recall (Vector + BM25) ➔ RRF Fusion ➔ Rerank ➔ Graph Expander (Neighbor, Breadcrumb, Imports) ➔ Smart Context Packer ➔ Packaged Output
+```
+
+---
+
+## 🔧 Configuration & Environment Variables
+
+Configure these settings inside `~/.coderecall/.env`:
+
+```env
+# Embedding Models Config
+EMBEDDINGS_API_KEYS=key1,key2        # Multi-key rotation supported
+EMBEDDINGS_BASE_URL=https://...
+EMBEDDINGS_MODEL=BAAI/bge-m3
+EMBEDDINGS_DIMENSIONS=1024
+
+# Reranker Config
+RERANK_API_KEYS=key1,key2
+RERANK_BASE_URL=https://...
+RERANK_MODEL=BAAI/bge-reranker-v2-m3
+
+# Admin Security
+ACE_ADMIN_PASSWORD=your-secure-password
+```
+
+---
+
+## 📄 License & Credits
+
+- Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
+- Extended and rebranded from original **CodeRecall** by `alistar.max`. Built with TypeScript, Tree-sitter, LanceDB, and Model Context Protocol.
+
+---
+Created with ❤️ by **Awesome Context Engineering** team.
