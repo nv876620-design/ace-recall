@@ -11,8 +11,9 @@ WORKDIR /app
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
+# Copy package files and scripts
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+COPY scripts ./scripts
 
 # Install dependencies including devDependencies (needed for compilation)
 RUN pnpm install --frozen-lockfile
