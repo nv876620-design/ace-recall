@@ -23,7 +23,14 @@ function hasValidEmbeddingKey(): boolean {
   const normalizeKey = (value: string | undefined): string | null => {
     if (!value) return null;
     const trimmed = value.trim();
-    if (!trimmed || trimmed === DEFAULT_API_KEY_PLACEHOLDER) return null;
+    if (
+      !trimmed ||
+      trimmed === DEFAULT_API_KEY_PLACEHOLDER ||
+      trimmed.startsWith('jina_new_key') ||
+      trimmed.includes('999999')
+    ) {
+      return null;
+    }
     return trimmed;
   };
 

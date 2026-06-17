@@ -13,6 +13,7 @@
 
 import { type EmbeddingConfig, getEmbeddingConfig } from '../config.js';
 import { logger } from '../utils/logger.js';
+import { EmbeddingCache } from './embeddingCache.js';
 
 /** Embedding 请求体 */
 interface EmbeddingRequest {
@@ -661,10 +662,33 @@ export class EmbeddingClient {
       return [];
     }
 
-    // 将文本分批
+    const cache = new EmbeddingCache(this.config.model, (this.config as any).cacheBaseDir);
+    const { hits, misses } = await cache.getMany(texts);
+
+    const hitRate = ((hits.size / texts.length) * 100).toFixed(1);
+    logger.info(
+      { total: texts.length, hits: hits.size, hitRate: `${hitRate}%` },
+      'Embedding cache check finished',
+    );
+
+    if (misses.length === 0) {
+      const results: EmbeddingResult[] = [];
+      for (let i = 0; i < texts.length; i++) {
+        results.push({
+          text: texts[i],
+          embedding: hits.get(i)!,
+          index: i,
+        });
+      }
+      return results;
+    }
+
+    const missTexts = misses.map((m) => m.text);
+
+    // 将 missing texts 分批
     const batches: string[][] = [];
-    for (let i = 0; i < texts.length; i += batchSize) {
-      batches.push(texts.slice(i, i + batchSize));
+    for (let i = 0; i < missTexts.length; i += batchSize) {
+      batches.push(missTexts.slice(i, i + batchSize));
     }
 
     // 创建进度追踪器（传入外部回调）
@@ -682,8 +706,35 @@ export class EmbeddingClient {
       // 输出完成统计
       progress.complete();
 
-      // 扁平化结果
-      return batchResults.flat();
+      const apiResults = batchResults.flat();
+
+      // Save new embeddings to cache
+      const newEmbeddings = apiResults.map((r) => r.embedding);
+      await cache.putMany(missTexts, newEmbeddings);
+
+      // Merge cached hits and new API results
+      const finalResults: EmbeddingResult[] = new Array(texts.length);
+
+      // Insert hits
+      for (const [originalIndex, embedding] of hits.entries()) {
+        finalResults[originalIndex] = {
+          text: texts[originalIndex],
+          embedding,
+          index: originalIndex,
+        };
+      }
+
+      // Insert api results using misses mapping
+      for (let idx = 0; idx < apiResults.length; idx++) {
+        const originalIndex = misses[idx].originalIndex;
+        finalResults[originalIndex] = {
+          text: texts[originalIndex],
+          embedding: apiResults[idx].embedding,
+          index: originalIndex,
+        };
+      }
+
+      return finalResults;
     } catch (err) {
       controller.abort();
       progress.cancel();

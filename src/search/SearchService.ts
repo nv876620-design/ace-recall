@@ -13,6 +13,7 @@ import { getRerankerClient } from '../api/reranker.js';
 import { getEmbeddingConfig } from '../config.js';
 import { initDb } from '../db/index.js';
 import { closeIndexer, getIndexer, type Indexer } from '../indexer/index.js';
+import { applyGeneratedFilePenalty } from '../scanner/generatedFiles.js';
 import { getLanguage } from '../scanner/language.js';
 import { isDebugEnabled, logger } from '../utils/logger.js';
 import type { SearchResult as VectorSearchResult } from '../vectorStore/index.js';
@@ -186,11 +187,11 @@ export class SearchService {
     // 0. Parse query for field-qualified filters
     const parsedQuery = parseQuery(query);
     const naturalQuery = parsedQuery.naturalText || query;
-    
+
     if (Object.keys(parsedQuery.filters).length > 0) {
       logger.debug({ filters: parsedQuery.filters }, 'Applying field-qualified filters');
     }
-    
+
     const timingMs: Record<string, number> = {};
     let t0 = Date.now();
     const filePathFilter = options?.filePathFilter;
@@ -208,23 +209,29 @@ export class SearchService {
       languageWhereClause,
       options?.languageFilter,
     );
-    
+
+    // Apply generated-file score penalty
+    const penalizedCandidates = candidates.map((candidate) => ({
+      ...candidate,
+      score: applyGeneratedFilePenalty(candidate.filePath, candidate.score),
+    }));
+
     // Apply field-qualified filters first
-    let filteredCandidates = candidates;
+    let filteredCandidates = penalizedCandidates;
     if (Object.keys(parsedQuery.filters).length > 0) {
-      const enriched = filteredCandidates.map(chunk => enrichChunkMetadata(chunk, this.db!));
+      const enriched = filteredCandidates.map((chunk) => enrichChunkMetadata(chunk, this.db!));
       filteredCandidates = applyFilters(enriched, parsedQuery.filters);
       logger.debug(
         { before: candidates.length, after: filteredCandidates.length },
-        'Field filters applied'
+        'Field filters applied',
       );
     }
-    
+
     // Then apply file path filter if provided
     if (filePathFilter) {
       filteredCandidates = filteredCandidates.filter((chunk) => filePathFilter(chunk.filePath));
     }
-    
+
     timingMs.retrieve = Date.now() - t0;
 
     // 2. 取 topM

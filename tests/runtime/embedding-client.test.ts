@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fsSync from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { EmbeddingClient } from '../../src/api/embedding.js';
+import { EmbeddingCache } from '../../src/api/embeddingCache.js';
+
+const testCacheBaseDir = fsSync.mkdtempSync(path.join(os.tmpdir(), 'cr-client-cache-'));
 
 const TEST_CONFIG = {
   apiKey: 'test-api-key',
@@ -8,6 +14,7 @@ const TEST_CONFIG = {
   model: 'test-model',
   maxConcurrency: 2,
   dimensions: 3,
+  cacheBaseDir: testCacheBaseDir,
 };
 
 function makeSuccessResponse(length: number): Response {
@@ -47,6 +54,7 @@ function makeErrorResponse(status: number, message: string): Response {
 }
 
 test('遇到 413 时应自动拆分批次并成功返回全部结果', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient(TEST_CONFIG);
   const originalFetch = globalThis.fetch;
   const requestBatchSizes: number[] = [];
@@ -84,6 +92,7 @@ test('遇到 413 时应自动拆分批次并成功返回全部结果', async () 
 });
 
 test('单条文本触发 413 时应直接失败，不进行无意义拆分', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient(TEST_CONFIG);
   const originalFetch = globalThis.fetch;
   let requestCount = 0;
@@ -102,6 +111,7 @@ test('单条文本触发 413 时应直接失败，不进行无意义拆分', asy
 });
 
 test('非 413 错误应保持原有行为直接抛出', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient(TEST_CONFIG);
   const originalFetch = globalThis.fetch;
   let requestCount = 0;
@@ -120,6 +130,7 @@ test('非 413 错误应保持原有行为直接抛出', async () => {
 });
 
 test('每次 HTTP 请求都应按 key 池轮询 Authorization', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient({
     ...TEST_CONFIG,
     apiKey: 'legacy-key',
@@ -145,6 +156,7 @@ test('每次 HTTP 请求都应按 key 池轮询 Authorization', async () => {
 });
 
 test('网络重试时应切换到下一个 key', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient({
     ...TEST_CONFIG,
     apiKey: 'legacy-key',
@@ -214,6 +226,7 @@ test('每个 key 应持有独立的速率限制状态，不共享降级窗口', 
 });
 
 test('批处理中某批次 403 失败后，onProgress 不再被调用', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient({ ...TEST_CONFIG, maxConcurrency: 5 });
   const originalFetch = globalThis.fetch;
   let fetchCallCount = 0;
@@ -254,6 +267,7 @@ test('批处理中某批次 403 失败后，onProgress 不再被调用', async (
 });
 
 test('批处理中某批次 403 失败后，后续排队批次不再发出 HTTP 请求', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient({ ...TEST_CONFIG, maxConcurrency: 1 });
   const originalFetch = globalThis.fetch;
   let fetchCallCount = 0;
@@ -289,6 +303,7 @@ test('批处理中某批次 403 失败后，后续排队批次不再发出 HTTP 
 });
 
 test('正常批处理完成时行为不变（回归验证）', async () => {
+  await new EmbeddingCache(TEST_CONFIG.model, testCacheBaseDir).purge();
   const client = new EmbeddingClient({ ...TEST_CONFIG, maxConcurrency: 2 });
   const originalFetch = globalThis.fetch;
   const progressCalls: Array<{ completed: number; total: number }> = [];
@@ -311,4 +326,8 @@ test('正常批处理完成时行为不变（回归验证）', async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('cleanup testCacheBaseDir', () => {
+  fsSync.rmSync(testCacheBaseDir, { recursive: true, force: true });
 });
