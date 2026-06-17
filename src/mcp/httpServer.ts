@@ -529,9 +529,18 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
  * Tạo Express app với MCP endpoints
  */
 export function createHttpServerApp(host = '127.0.0.1'): Express {
+  const allowedHosts = [host, 'localhost', '[::1]'];
+  if (process.env.FLY_APP_NAME) {
+    allowedHosts.push(`${process.env.FLY_APP_NAME}.fly.dev`);
+  }
+  if (process.env.ALLOWED_HOSTS) {
+    const customHosts = process.env.ALLOWED_HOSTS.split(',').map((h) => h.trim());
+    allowedHosts.push(...customHosts);
+  }
+
   const app = createMcpExpressApp({
     host,
-    allowedHosts: [host, 'localhost', '[::1]'],
+    allowedHosts,
   });
 
   const server = createMcpServer();
