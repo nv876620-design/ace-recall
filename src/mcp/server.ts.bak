@@ -8,14 +8,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../utils/logger.js';
-import { 
-  codebaseRetrievalSchema, 
-  handleCodebaseRetrieval,
-  generateCommitMessageSchema,
-  handleGenerateCommitMessage,
-  detectTasksSchema,
-  handleDetectTasks
-} from './tools/index.js';
+import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
 
 // ===========================================
 // 服务器配置
@@ -92,79 +85,6 @@ Examples of BAD queries:
       required: ['repo_path', 'information_request'],
     },
   },
-  {
-    name: 'generate-commit-message',
-    description: `
-Generate an AI-powered commit message from staged git changes.
-
-This tool analyzes your staged changes and creates a well-formatted commit message following best practices.
-
-Use cases:
-- After staging changes with 'git add', generate a commit message
-- Save time writing meaningful commit messages
-- Ensure consistent commit message style across the project
-
-Styles:
-- conventional: feat(scope): description (Conventional Commits format)
-- simple: Clear, concise description
-- detailed: Extended message with explanation
-
-Example workflow:
-1. Stage your changes: git add .
-2. Call this tool to generate message
-3. Review and commit: git commit -m "generated message"
-`,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        repo_path: {
-          type: 'string',
-          description: 'Path to the git repository',
-        },
-        style: {
-          type: 'string',
-          enum: ['conventional', 'simple', 'detailed'],
-          description: 'Commit message style (default: conventional)',
-        },
-        include_body: {
-          type: 'boolean',
-          description: 'Include detailed body in commit message (default: true)',
-        },
-      },
-      required: ['repo_path'],
-    },
-  },
-  {
-    name: 'detect-tasks',
-    description: `
-Automatically detect runnable tasks in a project.
-
-This tool scans common project files and discovers available tasks/commands:
-- package.json (npm/pnpm/yarn scripts)
-- Makefile (make targets)
-- justfile (just recipes)
-- deno.json (deno tasks)
-- Cargo.toml (cargo commands)
-
-Use cases:
-- "What tasks can I run in this project?"
-- "How do I build/test this project?"
-- Discover available development commands
-- Quick reference for project automation
-
-The tool returns a formatted list of all detected tasks with descriptions.
-`,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        repo_path: {
-          type: 'string',
-          description: 'Path to the project root',
-        },
-      },
-      required: ['repo_path'],
-    },
-  },
 ];
 
 // ===========================================
@@ -230,14 +150,6 @@ export async function startMcpServer(): Promise<void> {
         case 'codebase-retrieval': {
           const parsed = codebaseRetrievalSchema.parse(args);
           return await handleCodebaseRetrieval(parsed, undefined, onProgress);
-        }
-        case 'generate-commit-message': {
-          const parsed = generateCommitMessageSchema.parse(args);
-          return await handleGenerateCommitMessage(parsed);
-        }
-        case 'detect-tasks': {
-          const parsed = detectTasksSchema.parse(args);
-          return await handleDetectTasks(parsed);
         }
         default:
           throw new Error(`Unknown tool: ${name}`);

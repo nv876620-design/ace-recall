@@ -1,20 +1,22 @@
 {
-  "name": "@alistar.max/coderecall",
-  "version": "0.1.6",
-  "description": "A context weaving tool for LLMs",
+  "name": "@nv876620-design/ace-recall",
+  "version": "0.2.0",
+  "description": "Awesome Context Engineering - A powerful context weaving tool for AI agents",
   "license": "MIT",
-  "author": "alistar.max",
+  "author": "nv876620-design",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodingOX/CodeRecall.git"
+    "url": "git+https://github.com/nv876620-design/ace-recall.git"
   },
-  "homepage": "https://github.com/CodingOX/CodeRecall#readme",
+  "homepage": "https://github.com/nv876620-design/ace-recall#readme",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
   "bin": {
+    "ace-recall": "dist/index.js",
+    "ace": "dist/index.js",
     "coderecall": "dist/index.js",
     "cr": "dist/index.js"
   },

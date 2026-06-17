@@ -19,6 +19,7 @@ import type { SearchResult as VectorSearchResult } from '../vectorStore/index.js
 import { closeVectorStore, getVectorStore, type VectorStore } from '../vectorStore/index.js';
 import { ContextPacker } from './ContextPacker.js';
 import { DEFAULT_CONFIG } from './config.js';
+import { applyFilters, enrichChunkMetadata } from './filterApplier.js';
 import {
   isChunksFtsInitialized,
   isFtsInitialized,
@@ -27,6 +28,7 @@ import {
   segmentQuery,
 } from './fts.js';
 import { getGraphExpander } from './GraphExpander.js';
+import { parseQuery } from './queryParser.js';
 import type {
   BuildContextPackOptions,
   ContextPack,
@@ -181,14 +183,23 @@ export class SearchService {
     channels?: Partial<QueryChannels>,
     options?: BuildContextPackOptions,
   ): Promise<ContextPack> {
+    // 0. Parse query for field-qualified filters
+    const parsedQuery = parseQuery(query);
+    const naturalQuery = parsedQuery.naturalText || query;
+    
+    if (Object.keys(parsedQuery.filters).length > 0) {
+      logger.debug({ filters: parsedQuery.filters }, 'Applying field-qualified filters');
+    }
+    
     const timingMs: Record<string, number> = {};
     let t0 = Date.now();
     const filePathFilter = options?.filePathFilter;
     const languageWhereClause = buildLanguageWhereClause(options?.languageFilter);
 
-    const vectorQuery = channels?.vectorQuery ?? query;
-    const lexicalQuery = channels?.lexicalQuery ?? query;
-    const rerankQuery = channels?.rerankQuery ?? query;
+    // Use natural text (without filters) for vector/lexical/rerank
+    const vectorQuery = channels?.vectorQuery ?? naturalQuery;
+    const lexicalQuery = channels?.lexicalQuery ?? naturalQuery;
+    const rerankQuery = channels?.rerankQuery ?? naturalQuery;
 
     // 1. 混合召回
     const candidates = await this.hybridRetrieve(
@@ -197,9 +208,23 @@ export class SearchService {
       languageWhereClause,
       options?.languageFilter,
     );
-    const filteredCandidates = filePathFilter
-      ? candidates.filter((chunk) => filePathFilter(chunk.filePath))
-      : candidates;
+    
+    // Apply field-qualified filters first
+    let filteredCandidates = candidates;
+    if (Object.keys(parsedQuery.filters).length > 0) {
+      const enriched = filteredCandidates.map(chunk => enrichChunkMetadata(chunk, this.db!));
+      filteredCandidates = applyFilters(enriched, parsedQuery.filters);
+      logger.debug(
+        { before: candidates.length, after: filteredCandidates.length },
+        'Field filters applied'
+      );
+    }
+    
+    // Then apply file path filter if provided
+    if (filePathFilter) {
+      filteredCandidates = filteredCandidates.filter((chunk) => filePathFilter(chunk.filePath));
+    }
+    
     timingMs.retrieve = Date.now() - t0;
 
     // 2. 取 topM

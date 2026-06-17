@@ -387,5 +387,99 @@ cli
     }
   });
 
+cli
+  .command('git-msg [path]', '生成 AI 驱动的 Git 提交消息')
+  .option('--style <style>', '消息风格: conventional, simple, detailed', { default: 'conventional' })
+  .option('--no-body', '不包含详细消息体')
+  .action(async (targetPath: string | undefined, options: { style?: string; body?: boolean }) => {
+    const rootPath = targetPath ? path.resolve(targetPath) : process.cwd();
+    
+    logger.info(`生成提交消息: ${rootPath}`);
+    
+    try {
+      const { generateCommitMessage } = await import('./git/commitMessage.js');
+      const { isGitRepository } = await import('./git/diff.js');
+      
+      if (!isGitRepository(rootPath)) {
+        logger.error(`${rootPath} 不是 Git 仓库`);
+        process.exit(1);
+      }
+      
+      const style = options.style as 'conventional' | 'simple' | 'detailed' || 'conventional';
+      const includeBody = options.body !== false;
+      
+      const message = await generateCommitMessage(rootPath, {
+        style,
+        includeBody,
+      });
+      
+      logger.info('生成的提交消息:');
+      console.log('');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(message);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('');
+      console.log('使用此消息:');
+      console.log(`  git commit -m "${message.split('\n')[0]}"`);
+      console.log('');
+      
+    } catch (err) {
+      const error = err as { message?: string; stack?: string };
+      logger.error({ err, stack: error.stack }, `生成提交消息失败: ${error.message}`);
+      process.exit(1);
+    }
+  });
+
+cli
+  .command('tasks [path]', '检测项目中的可运行任务')
+  .action(async (targetPath: string | undefined) => {
+    const rootPath = targetPath ? path.resolve(targetPath) : process.cwd();
+    
+    logger.info(`检测任务: ${rootPath}`);
+    
+    try {
+      const { detectProjectTasks } = await import('./mcp/tools/detectTasks.js');
+      
+      const tasks = detectProjectTasks(rootPath);
+      
+      if (tasks.length === 0) {
+        logger.warn('未找到任何任务');
+        console.log('');
+        console.log('支持的文件: package.json, Makefile, justfile, deno.json, Cargo.toml');
+        process.exit(0);
+      }
+      
+      console.log('');
+      console.log(`━━━━ 检测到 ${tasks.length} 个任务 ━━━━`);
+      console.log('');
+      
+      // Group by type
+      const grouped = tasks.reduce((acc, task) => {
+        if (!acc[task.type]) acc[task.type] = [];
+        acc[task.type].push(task);
+        return acc;
+      }, {} as Record<string, typeof tasks>);
+      
+      for (const [type, typeTasks] of Object.entries(grouped)) {
+        console.log(`【${type.toUpperCase()}】 (${typeTasks[0].file})`);
+        for (const task of typeTasks) {
+          const name = task.name.padEnd(35);
+          const desc = task.description || task.command;
+          console.log(`  ${name} ${desc}`);
+        }
+        console.log('');
+      }
+      
+      console.log('运行任务:');
+      console.log(`  ${tasks[0].command}`);
+      console.log('');
+      
+    } catch (err) {
+      const error = err as { message?: string; stack?: string };
+      logger.error({ err, stack: error.stack }, `检测任务失败: ${error.message}`);
+      process.exit(1);
+    }
+  });
+
 cli.help();
 cli.parse();
