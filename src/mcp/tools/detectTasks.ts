@@ -70,9 +70,10 @@ function detectMakeTasks(rootPath: string): DetectedTask[] {
 
     // Match target definitions: target: dependencies
     const targetRegex = /^([a-zA-Z0-9_-]+):\s*([^#\n]*)?(?:#\s*(.*))?$/gm;
-    let match: RegExpExecArray | null;
 
-    while ((match = targetRegex.exec(content)) !== null) {
+    while (true) {
+      const match = targetRegex.exec(content);
+      if (match === null) break;
       const [, name, deps, comment] = match;
       // Skip internal targets (starting with .)
       if (name.startsWith('.')) continue;
@@ -108,9 +109,10 @@ function detectJustTasks(rootPath: string): DetectedTask[] {
 
     // Match recipe definitions: name param1 param2:
     const recipeRegex = /^([a-zA-Z0-9_-]+)(?:\s+[^:]*)?:\s*(?:#\s*(.*))?$/gm;
-    let match: RegExpExecArray | null;
 
-    while ((match = recipeRegex.exec(content)) !== null) {
+    while (true) {
+      const match = recipeRegex.exec(content);
+      if (match === null) break;
       const [, name, comment] = match;
       // Skip internal recipes (starting with _)
       if (name.startsWith('_')) continue;

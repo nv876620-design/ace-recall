@@ -39,9 +39,10 @@ export function parseQuery(query: string): ParsedQuery {
   const fieldPattern = /\b(kind|lang|language|path|name):([^\s]+)/gi;
 
   let lastIndex = 0;
-  let match: RegExpExecArray | null;
 
-  while ((match = fieldPattern.exec(query)) !== null) {
+  while (true) {
+    const match = fieldPattern.exec(query);
+    if (match === null) break;
     // Add text before this match
     if (match.index > lastIndex) {
       parts.push(query.slice(lastIndex, match.index));

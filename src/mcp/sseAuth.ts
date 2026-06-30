@@ -39,7 +39,8 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
     req.path === '/get-models' ||
     req.path === '/augment/get-models'
   ) {
-    return next();
+    next();
+    return;
   }
 
   const token = extractBearerToken(req);

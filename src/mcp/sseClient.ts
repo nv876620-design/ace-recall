@@ -24,7 +24,7 @@ export class ACEMCPClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${this.token}`,
       },
     });
 
@@ -61,7 +61,7 @@ export class ACEMCPClient {
           const EventSourceModule = require('eventsource');
           this.eventSource = new EventSourceModule(url, {
             headers: {
-              'Authorization': `Bearer ${this.token}`,
+              Authorization: `Bearer ${this.token}`,
             },
           }) as EventSource;
         } catch (err) {
@@ -158,7 +158,7 @@ export class ACEMCPClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${this.token}`,
         'X-Session-Id': this.sessionId,
       },
       body: JSON.stringify(payload),
@@ -194,7 +194,7 @@ export class ACEMCPClient {
     const response = await fetch(`${this.baseUrl}/mcp/sessions`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${this.token}`,
       },
     });
 
@@ -212,7 +212,7 @@ export class ACEMCPClient {
     const response = await fetch(`${this.baseUrl}/mcp/stats`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${this.token}`,
       },
     });
 
@@ -237,7 +237,7 @@ export class ACEMCPClient {
         await fetch(`${this.baseUrl}/mcp/session/${this.sessionId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${this.token}`,
+            Authorization: `Bearer ${this.token}`,
           },
         });
       } catch (err) {
@@ -273,11 +273,10 @@ export async function exampleUsage() {
     await client.connectSSE();
 
     // Make MCP request
-    const result = await client.searchCodebase(
-      '/path/to/repo',
-      'authentication logic',
-      ['login', 'password'],
-    );
+    const result = await client.searchCodebase('/path/to/repo', 'authentication logic', [
+      'login',
+      'password',
+    ]);
     console.log('Search result:', result);
 
     // Clean up
