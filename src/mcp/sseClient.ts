@@ -29,11 +29,11 @@ export class ACEMCPClient {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as { error?: string };
       throw new Error(`Failed to create session: ${error.error || response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { sessionId: string };
     this.sessionId = data.sessionId;
     return data.sessionId;
   }
@@ -52,8 +52,8 @@ export class ACEMCPClient {
       const url = `${this.baseUrl}/mcp/sse?sessionId=${this.sessionId}`;
 
       // Browser environment (limited - no Authorization header support)
-      if (typeof window !== 'undefined' && window.EventSource) {
-        this.eventSource = new EventSource(url);
+      if (typeof globalThis !== 'undefined' && (globalThis as any).window?.EventSource) {
+        this.eventSource = new (globalThis as any).window.EventSource(url);
       } else {
         // Node.js environment - requires 'eventsource' package
         try {
@@ -70,41 +70,47 @@ export class ACEMCPClient {
         }
       }
 
-      this.eventSource.onopen = () => {
+      const es = this.eventSource;
+      if (!es) {
+        reject(new Error('Failed to create EventSource'));
+        return;
+      }
+
+      es.onopen = () => {
         console.log('[ACE MCP] SSE connection opened');
         resolve();
       };
 
-      this.eventSource.onerror = (error) => {
+      es.onerror = (error) => {
         console.error('[ACE MCP] SSE error:', error);
         reject(error);
       };
 
       // Listen for specific events
-      this.eventSource.addEventListener('connected', (event: any) => {
+      es.addEventListener('connected', (event: any) => {
         const data = JSON.parse(event.data);
         console.log('[ACE MCP] Connected:', data);
         this.handleMessage('connected', data);
       });
 
-      this.eventSource.addEventListener('heartbeat', (event: any) => {
+      es.addEventListener('heartbeat', (event: any) => {
         const data = JSON.parse(event.data);
         this.handleMessage('heartbeat', data);
       });
 
-      this.eventSource.addEventListener('notification', (event: any) => {
+      es.addEventListener('notification', (event: any) => {
         const data = JSON.parse(event.data);
         this.handleMessage('notification', data);
       });
 
-      this.eventSource.addEventListener('close', (event: any) => {
+      es.addEventListener('close', (event: any) => {
         const data = JSON.parse(event.data);
         console.log('[ACE MCP] Server closed connection:', data);
         this.handleMessage('close', data);
         this.disconnect();
       });
 
-      this.eventSource.addEventListener('reconnect', (event: any) => {
+      es.addEventListener('reconnect', (event: any) => {
         const data = JSON.parse(event.data);
         console.log('[ACE MCP] Reconnect requested:', data);
         this.handleMessage('reconnect', data);
@@ -165,7 +171,7 @@ export class ACEMCPClient {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as { error?: string };
       throw new Error(`MCP request failed: ${error.error || response.statusText}`);
     }
 

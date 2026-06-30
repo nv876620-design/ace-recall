@@ -1939,7 +1939,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
    * DELETE /mcp/session/:sessionId - Destroy session
    */
   app.delete('/mcp/session/:sessionId', requireAuth, (req: Request, res: Response) => {
-    const sessionId = req.params.sessionId;
+    const sessionId = req.params.sessionId as string;
     const session = sessionManager.getSession(sessionId);
 
     if (!session) {
@@ -1952,7 +1952,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
       return res.status(403).json({ error: 'Cannot destroy session owned by another user' });
     }
 
-    const destroyed = sessionManager.destroySession(sessionId);
+    const destroyed = sessionManager.destroySession(sessionId as string);
     res.json({ success: destroyed });
   });
 
