@@ -1,6 +1,6 @@
-# CodeRecall 本地手动发版操作手册
+# ACE 本地手动发版操作手册
 
-> 适用场景：在本地机器手动发布 `@alistar.max/coderecall` 及语言插件包。
+> 适用场景：在本地机器手动发布 `@alistar.max/ace` 及语言插件包。
 
 > 若本次只发布主包（不发布插件），请直接参考：`docs/release/main-package-only-release.md`。
 
@@ -101,10 +101,10 @@ npm publish --access public --no-git-checks --provenance
 ### 6.1 检查 npm registry
 
 ```bash
-npm view @alistar.max/coderecall@0.0.8 version
-npm view @alistar.max/coderecall-lang-all@0.0.8 version
-npm view @alistar.max/coderecall-lang-typescript@0.0.8 version
-npm view @alistar.max/coderecall-lang-rust@0.0.8 version
+npm view @alistar.max/ace@0.0.8 version
+npm view @alistar.max/ace-lang-all@0.0.8 version
+npm view @alistar.max/ace-lang-typescript@0.0.8 version
+npm view @alistar.max/ace-lang-rust@0.0.8 version
 ```
 
 ### 6.2 本地安装冒烟
@@ -113,9 +113,9 @@ npm view @alistar.max/coderecall-lang-rust@0.0.8 version
 TMP_DIR="$(mktemp -d)"
 cd "$TMP_DIR"
 npm init -y
-npm i @alistar.max/coderecall@0.0.8
-npm i @alistar.max/coderecall-lang-all@0.0.8
-npx coderecall --version
+npm i @alistar.max/ace@0.0.8
+npm i @alistar.max/ace-lang-all@0.0.8
+npx ace --version
 ```
 
 ## 7. 常见问题

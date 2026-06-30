@@ -211,7 +211,7 @@ function createConsoleStream(): Writable {
 // Logger 创建
 // =========================================
 
-// 开发环境：写入 ~/.coderecall/logs + 控制台输出
+// 开发环境：写入 ~/.ace/logs + 控制台输出
 function createDevLogger(): pino.Logger {
   ensureLogDir(logDir);
 
@@ -227,7 +227,7 @@ function createDevLogger(): pino.Logger {
   return pino(
     {
       level: logLevel,
-      name: 'coderecall',
+      name: 'ace',
     },
     // MCP 模式下禁用控制台输出，避免污染 STDIO 协议流
     isMcpMode
@@ -239,7 +239,7 @@ function createDevLogger(): pino.Logger {
   );
 }
 
-// 生产环境：写入 ~/.coderecall/logs + 控制台输出（不依赖 pino-pretty）
+// 生产环境：写入 ~/.ace/logs + 控制台输出（不依赖 pino-pretty）
 function createProdLogger(): pino.Logger {
   ensureLogDir(logDir);
 
@@ -255,7 +255,7 @@ function createProdLogger(): pino.Logger {
   return pino(
     {
       level: logLevel,
-      name: 'coderecall',
+      name: 'ace',
     },
     // MCP 模式下禁用控制台输出，避免污染 STDIO 协议流
     isMcpMode

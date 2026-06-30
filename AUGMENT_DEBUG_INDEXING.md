@@ -6,7 +6,7 @@ Augment is not yet fully synced and may be unable to answer questions about your
 ```
 
 → Augment native indexing vẫn đang chạy (không bị disable)
-→ CodeRecall integration chưa hoạt động
+→ ACE integration chưa hoạt động
 
 ---
 
@@ -58,7 +58,7 @@ cat ~/.augment/byok-config.json
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "injectContext": true
   }
@@ -67,7 +67,7 @@ cat ~/.augment/byok-config.json
 
 **Nếu không có**:
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 node scripts/generate-augment-config.cjs --anthropic-key sk-ant-YOUR_KEY
 ```
 
@@ -81,7 +81,7 @@ Ctrl+Shift+U → Select "Augment" channel
 
 **Tìm dòng này** (chứng minh patch hoạt động):
 ```
-[BYOK] Augment indexing disabled, use CodeRecall instead
+[BYOK] Augment indexing disabled, use ACE instead
 ```
 
 **Nếu KHÔNG thấy**:
@@ -92,7 +92,7 @@ Ctrl+Shift+U → Select "Augment" channel
 **Nếu thấy log lỗi**:
 ```
 [ERROR] spawn node ENOENT
-[WARN] CodeRecall search failed
+[WARN] ACE search failed
 ```
 → Config path sai
 
@@ -160,12 +160,12 @@ Then reload VS Code.
 
 ---
 
-## 🧪 Test CodeRecall Integration
+## 🧪 Test ACE Integration
 
 ### Test 1: MCP Server Manually
 
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 
 # Test MCP server chạy được
 node dist/index.js mcp
@@ -179,10 +179,10 @@ Check path trong config chính xác:
 
 ```bash
 # Windows
-dir D:\MCP\CodeRecall\dist\index.js
+dir D:\MCP\ACE\dist\index.js
 
 # Linux/Mac
-ls -la ~/CodeRecall/dist/index.js
+ls -la ~/ACE/dist/index.js
 ```
 
 File phải tồn tại.
@@ -190,7 +190,7 @@ File phải tồn tại.
 ### Test 3: Integration Test
 
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 node scripts/test-augment-mcp-client.cjs
 ```
 
@@ -215,15 +215,15 @@ node scripts/test-augment-mcp-client.cjs
 2. **Logs đúng**:
    ```
    [INFO] BYOK enabled
-   [BYOK] Augment indexing disabled, use CodeRecall instead
-   [INFO] CodeRecall: Connecting to MCP server
-   [INFO] CodeRecall: Connected successfully
+   [BYOK] Augment indexing disabled, use ACE instead
+   [INFO] ACE: Connecting to MCP server
+   [INFO] ACE: Connected successfully
    ```
 
 3. **Chat works immediately**:
    - Open folder → Chat ngay được
    - Không cần đợi indexing
-   - CodeRecall search on-demand
+   - ACE search on-demand
 
 ### ❌ Khi chưa đúng:
 
@@ -261,14 +261,14 @@ node scripts/test-augment-mcp-client.cjs
 
 ### Scenario 2: Config không load
 
-**Symptom**: Log có "indexing disabled" nhưng không có CodeRecall logs
+**Symptom**: Log có "indexing disabled" nhưng không có ACE logs
 
 **Root cause**: Config file sai hoặc không tồn tại
 
 **Fix**:
 ```bash
 # Regenerate config
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 node scripts/generate-augment-config.cjs --anthropic-key sk-ant-xxx
 
 # Verify
@@ -284,7 +284,7 @@ cat ~/.augment/byok-config.json
 **Fix**:
 ```bash
 # Get absolute path
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 pwd  # Copy output
 
 # Update config mcpServerArgs[0] với path này
@@ -301,7 +301,7 @@ pwd  # Copy output
 | **Indexing spinner** | ❌ Not visible | ✅ Visible (bad) |
 | **"Not synced" message** | ❌ Not shown | ✅ Shown (bad) |
 | **Log: "indexing disabled"** | ✅ Present | ❌ Missing |
-| **Log: CodeRecall connect** | ✅ Present | ❌ Missing |
+| **Log: ACE connect** | ✅ Present | ❌ Missing |
 | **Chat response** | References code | Generic |
 | **Status bar** | "BYOK: Enabled" | May show enabled but not working |
 
@@ -320,7 +320,7 @@ cat > /tmp/augment-debug.txt << EOF
 $(cat ~/.augment/byok-config.json 2>&1)
 
 === MCP Test ===
-$(node D:\MCP\CodeRecall\dist\index.js mcp 2>&1 &)
+$(node D:\MCP\ACE\dist\index.js mcp 2>&1 &)
 sleep 2
 pkill -f "node.*mcp"
 
@@ -356,8 +356,8 @@ Khi mọi thứ hoạt động:
 - [ ] Config file exists: `~/.augment/byok-config.json`
 - [ ] Config: `enabled: true, injectContext: true`
 - [ ] Log: "[BYOK] Augment indexing disabled"
-- [ ] Log: "[INFO] CodeRecall: Connecting..."
-- [ ] Log: "[INFO] CodeRecall: Connected successfully"
+- [ ] Log: "[INFO] ACE: Connecting..."
+- [ ] Log: "[INFO] ACE: Connected successfully"
 - [ ] NO "not yet fully synced" message
 - [ ] NO indexing spinner
 - [ ] Chat works immediately
@@ -375,7 +375,7 @@ Khi mọi thứ hoạt động:
 **Quick test**:
 ```bash
 # All in one
-cd D:\MCP\CodeRecall && \
+cd D:\MCP\ACE && \
 node scripts/test-augment-mcp-client.cjs && \
 echo "✅ MCP works, check VS Code logs now"
 ```

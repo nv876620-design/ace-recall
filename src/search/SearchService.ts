@@ -219,7 +219,7 @@ export class SearchService {
     // Apply field-qualified filters first
     let filteredCandidates = penalizedCandidates;
     if (Object.keys(parsedQuery.filters).length > 0) {
-      const enriched = filteredCandidates.map((chunk) => enrichChunkMetadata(chunk, this.db!));
+      const enriched = filteredCandidates.map((chunk) => enrichChunkMetadata(chunk));
       filteredCandidates = applyFilters(enriched, parsedQuery.filters);
       logger.debug(
         { before: candidates.length, after: filteredCandidates.length },

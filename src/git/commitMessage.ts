@@ -220,13 +220,16 @@ function generateFallbackMessage(diffResult: GitDiffResult, style: string): stri
 
   // Generate description
   const fileCount = stats.filesChanged;
-  const action =
-    hasNewFiles ? 'add' : hasDeletions ? 'remove' : isTest ? 'update tests for' : 'update';
+  const action = hasNewFiles
+    ? 'add'
+    : hasDeletions
+      ? 'remove'
+      : isTest
+        ? 'update tests for'
+        : 'update';
 
   const description =
-    fileCount === 1
-      ? `${action} ${stagedFiles[0]}`
-      : `${action} ${fileCount} ${primaryExt} files`;
+    fileCount === 1 ? `${action} ${stagedFiles[0]}` : `${action} ${fileCount} ${primaryExt} files`;
 
   if (style === 'conventional') {
     return scope ? `${type}(${scope}): ${description}` : `${type}: ${description}`;

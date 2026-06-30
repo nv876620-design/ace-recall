@@ -1,11 +1,11 @@
 {
-  "name": "@alistar.max/coderecall-lang-all",
+  "name": "@alistar.max/ace-lang-all",
   "version": "0.1.6",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodingOX/CodeRecall.git"
+    "url": "git+https://github.com/nv876620-design/ace-recall.git"
   },
-  "homepage": "https://github.com/CodingOX/CodeRecall#readme",
+  "homepage": "https://github.com/nv876620-design/ace-recall#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -23,16 +23,16 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@alistar.max/coderecall-lang-typescript": "0.1.3",
-    "@alistar.max/coderecall-lang-kotlin": "0.1.3",
-    "@alistar.max/coderecall-lang-csharp": "0.1.3",
-    "@alistar.max/coderecall-lang-cpp": "0.1.3",
-    "@alistar.max/coderecall-lang-java": "0.1.3",
-    "@alistar.max/coderecall-lang-ruby": "0.1.3",
-    "@alistar.max/coderecall-lang-c": "0.1.3",
-    "@alistar.max/coderecall-lang-php": "0.1.3",
-    "@alistar.max/coderecall-lang-rust": "0.1.3",
-    "@alistar.max/coderecall-lang-swift": "0.1.3"
+    "@alistar.max/ace-lang-typescript": "workspace:*",
+    "@alistar.max/ace-lang-kotlin": "workspace:*",
+    "@alistar.max/ace-lang-csharp": "workspace:*",
+    "@alistar.max/ace-lang-cpp": "workspace:*",
+    "@alistar.max/ace-lang-java": "workspace:*",
+    "@alistar.max/ace-lang-ruby": "workspace:*",
+    "@alistar.max/ace-lang-c": "workspace:*",
+    "@alistar.max/ace-lang-php": "workspace:*",
+    "@alistar.max/ace-lang-rust": "workspace:*",
+    "@alistar.max/ace-lang-swift": "workspace:*"
   },
   "files": [
     "dist/**/*.js",

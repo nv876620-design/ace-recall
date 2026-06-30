@@ -15,7 +15,7 @@
 - ✅ Generate commit messages via AI API (Qwen/Qwen2.5-7B-Instruct)
 - ✅ Support 3 styles: conventional, simple, detailed
 - ✅ Fallback to rule-based generation if API fails
-- ✅ CLI command: `coderecall git-msg`
+- ✅ CLI command: `ace git-msg`
 - ✅ MCP tool: `generate-commit-message`
 
 **AI Prompt Engineering:**
@@ -54,7 +54,7 @@
 - ✅ Regex-based parsing (no external dependencies)
 - ✅ Extracts task descriptions from comments
 - ✅ Groups by task type
-- ✅ CLI command: `coderecall tasks`
+- ✅ CLI command: `ace tasks`
 - ✅ MCP tool: `detect-tasks`
 
 ---
@@ -82,11 +82,11 @@
 - `src/index.ts` - Add new commands
 
 **New CLI Commands:**
-1. `coderecall git-msg [path]`
+1. `ace git-msg [path]`
    - Options: `--style`, `--no-body`
    - Generates and displays commit message
 
-2. `coderecall tasks [path]`
+2. `ace tasks [path]`
    - No options needed
    - Lists all detected tasks grouped by type
 
@@ -108,7 +108,7 @@
 
 ```bash
 # Setup
-cd d:\MCP\CodeRecall
+cd d:\MCP\ACE
 echo "test" > test-file.txt
 git add test-file.txt
 
@@ -138,7 +138,7 @@ rm test-file.txt
 
 ```bash
 # Test CLI
-cd d:\MCP\CodeRecall
+cd d:\MCP\ACE
 pnpm build
 node dist/index.js tasks
 
@@ -157,7 +157,7 @@ node dist/index.js tasks
 # Test in empty directory
 mkdir /tmp/empty-project
 cd /tmp/empty-project
-node d:\MCP\CodeRecall\dist\index.js tasks
+node d:\MCP\ACE\dist\index.js tasks
 
 # Expected Output:
 # 未找到任何任务
@@ -168,7 +168,7 @@ node d:\MCP\CodeRecall\dist\index.js tasks
 
 ```bash
 # Start MCP server
-cd d:\MCP\CodeRecall
+cd d:\MCP\ACE
 pnpm build
 node dist/index.js mcp
 
@@ -180,7 +180,7 @@ node dist/index.js mcp
 # {
 #   "name": "generate-commit-message",
 #   "arguments": {
-#     "repo_path": "d:\\MCP\\CodeRecall",
+#     "repo_path": "d:\\MCP\\ACE",
 #     "style": "conventional"
 #   }
 # }
@@ -189,7 +189,7 @@ node dist/index.js mcp
 # {
 #   "name": "detect-tasks",
 #   "arguments": {
-#     "repo_path": "d:\\MCP\\CodeRecall"
+#     "repo_path": "d:\\MCP\\ACE"
 #   }
 # }
 ```
@@ -198,23 +198,23 @@ node dist/index.js mcp
 
 ```bash
 # Test 1: No staged changes
-cd d:\MCP\CodeRecall
+cd d:\MCP\ACE
 node dist/index.js git-msg
 # Expected: Error: No staged changes found
 
 # Test 2: Not a git repo
 mkdir /tmp/not-git
 cd /tmp/not-git
-node d:\MCP\CodeRecall\dist\index.js git-msg
+node d:\MCP\ACE\dist\index.js git-msg
 # Expected: Error: not a git repository
 
 # Test 3: No API config
-mv ~/.coderecall/.env ~/.coderecall/.env.bak
+mv ~/.ace/.env ~/.ace/.env.bak
 echo "test" > test.txt
 git add test.txt
 node dist/index.js git-msg
 # Expected: Should fallback to rule-based generation
-mv ~/.coderecall/.env.bak ~/.coderecall/.env
+mv ~/.ace/.env.bak ~/.ace/.env
 git reset HEAD test.txt
 rm test.txt
 ```
@@ -301,7 +301,7 @@ Total LOC Added: ~1,581 lines
 2. **For interactive commit:**
    ```bash
    # Use git aliases
-   git config alias.acommit '!coderecall git-msg && git commit'
+   git config alias.acommit '!ace git-msg && git commit'
    ```
 
 ---
@@ -310,13 +310,13 @@ Total LOC Added: ~1,581 lines
 
 ### Why Not Shell Out Less?
 - **NotepadAI**: Parses git directly (no shell)
-- **CodeRecall**: Uses `execSync('git ...')`
+- **ACE**: Uses `execSync('git ...')`
 - **Reason**: Simplicity. Git is ubiquitous, parsing .git is complex
 
 ### Why API Instead of Local LLM?
 - **Pros**: No model download, fast, consistent
 - **Cons**: Requires internet, costs (minimal)
-- **Rationale**: CodeRecall already uses APIs (embedding/reranker)
+- **Rationale**: ACE already uses APIs (embedding/reranker)
 
 ### Why Regex for Task Parsing?
 - **Pros**: No dependencies, fast, deterministic
@@ -354,13 +354,13 @@ Inspired by NotepadAI, add two new features:
    - Generate commit messages from staged diff
    - Support 3 styles: conventional, simple, detailed
    - Fallback to rule-based generation if API fails
-   - CLI: coderecall git-msg
+   - CLI: ace git-msg
    - MCP: generate-commit-message tool
 
 2. Automatic Task Detection
    - Detect tasks from package.json, Makefile, justfile, etc.
    - Parse descriptions from comments
-   - CLI: coderecall tasks
+   - CLI: ace tasks
    - MCP: detect-tasks tool
 
 New files:

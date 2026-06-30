@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CodeRecall 是一个为 AI 代码助手设计的语义检索引擎，采用混合搜索（向量 + 词法）、智能上下文扩展和 Token 感知打包策略。通过 CLI、MCP Server (stdio) 和 MCP HTTP Server 三种方式提供服务。
+ACE (Awesome Context Engineering) 是一个为 AI 代码助手设计的语义检索引擎，采用混合搜索（向量 + 词法）、智能上下文扩展和 Token 感知打包策略。通过 CLI、MCP Server (stdio) 和 MCP HTTP Server 三种方式提供服务。
 
 ## Development Commands
 
@@ -32,14 +32,14 @@ pnpm benchmark:offline        # 离线 Recall@K / MRR / nDCG 评测
 pnpm benchmark:tune           # 自动调参（RRF 回放）
 
 # CLI 命令
-coderecall init            # 初始化配置文件 (~/.coderecall/.env)
-coderecall index [path]    # 索引代码库（-f 强制重建）
-coderecall search          # 本地检索
-coderecall mcp             # 启动 MCP 服务端 (stdio)
-coderecall mcp-http        # 启动 MCP HTTP 服务端 (默认 :3000)
-coderecall doctor .        # 索引一致性审计（--repair 自动修复）
-coderecall feedback .      # 隐式反馈闭环摘要（--days 7 --top 10）
-coderecall tune <dataset>  # 离线自动调参（--target mrr --k 1,3,5）
+ace init                   # 初始化配置文件 (~/.ace/.env)
+ace index [path]           # 索引代码库（-f 强制重建）
+ace search                 # 本地检索
+ace mcp                    # 启动 MCP 服务端 (stdio)
+ace mcp-http               # 启动 MCP HTTP 服务端 (默认 :3000)
+ace doctor .               # 索引一致性审计（--repair 自动修复）
+ace feedback .             # 隐式反馈闭环摘要（--days 7 --top 10）
+ace tune <dataset>         # 离线自动调参（--target mrr --k 1,3,5）
 ```
 
 ## Architecture
@@ -59,8 +59,8 @@ pnpm workspace monorepo，根目录 `pnpm-workspace.yaml` 声明 `packages/*`。
 
 `src/config.ts` 必须在任何模块之前加载（`src/index.ts` 第 3 行 `import './config.js'`），它调用 `dotenv` 加载环境变量：
 
-- **开发环境** (`NODE_ENV=development/dev`): 先加载 `cwd/.env`，回退到 `~/.coderecall/.env`
-- **生产环境** (默认): 只加载 `~/.coderecall/.env`
+- **开发环境** (`NODE_ENV=development/dev`): 先加载 `cwd/.env`，回退到 `~/.ace/.env`
+- **生产环境** (默认): 只加载 `~/.ace/.env`
 - **MCP 模式**: 通过 `process.argv[2] === 'mcp'` 检测
 
 所有模块通过 `src/config.ts` 导出的 getter 函数读取配置（`getEmbeddingConfig()`、`getRerankerConfig()`），**禁止直接读 `process.env`**。
@@ -71,8 +71,9 @@ pnpm workspace monorepo，根目录 `pnpm-workspace.yaml` 声明 `packages/*`。
 - `RERANK_API_KEYS` (推荐) / `RERANK_API_KEY` (兼容): Reranker API Key，同上
 - `EMBEDDINGS_BASE_URL`, `EMBEDDINGS_MODEL`, `EMBEDDINGS_DIMENSIONS`, `EMBEDDINGS_MAX_CONCURRENCY`
 - `RERANK_BASE_URL`, `RERANK_MODEL`, `RERANK_TOP_N`
+- `ACE_PROFILE` (推荐) / `CODE_RECALL_PROFILE` (兼容): 默认配置档位 `quality | balanced | performance`
 - `IGNORE_PATTERNS`, `INCLUDE_PATTERNS`: 额外忽略/包含模式
-- `LOG_LEVEL=debug`: 开启调试日志，输出到 `~/.coderecall/logs/app.YYYY-MM-DD.log`
+- `LOG_LEVEL=debug`: 开启调试日志，输出到 `~/.ace/logs/app.YYYY-MM-DD.log`
 
 ## Key Modules
 
@@ -140,7 +141,7 @@ scanner/
 
 ### 索引自愈机制
 
-`src/indexer/index.ts` 通过 `vector_index_hash` 对比文件 hash 检测过期 chunks，采用"先插入新版本再删除旧版本"的单调更新策略，避免向量索引出现缺失窗口。`coderecall doctor . --repair` 可修复 chunks_fts 中的孤儿记录。
+`src/indexer/index.ts` 通过 `vector_index_hash` 对比文件 hash 检测过期 chunks，采用"先插入新版本再删除旧版本"的单调更新策略，避免向量索引出现缺失窗口。`ace doctor . --repair` 可修复 chunks_fts 中的孤儿记录。
 
 ## Code Conventions
 

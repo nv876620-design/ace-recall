@@ -11,14 +11,16 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import express, { type Express, type Request, type Response } from 'express';
-import { logger } from '../utils/logger.js';
-import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
 import {
-  verifyAdminPassword,
   generateSessionToken,
-  verifySessionToken,
   getAdminAuthConfig,
+  verifyAdminPassword,
+  verifySessionToken,
 } from '../auth/adminAuth.js';
+import { logger } from '../utils/logger.js';
+import { sessionManager } from './sessionManager.js';
+import { authenticateMCP, getAuthUser, requireAuth } from './sseAuth.js';
+import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
 
 const SERVER_NAME = 'ace-recall';
 
@@ -157,7 +159,7 @@ function createMcpServer(): Server {
 
 function getPreferredHomeEnvFilePath() {
   const home = process.env.HOME || process.env.USERPROFILE || '';
-  return path.join(home, '.coderecall', '.env');
+  return path.join(home, '.ace', '.env');
 }
 
 function getDefaultEnvFilePath() {
@@ -237,7 +239,10 @@ function maskApiKey(key: string): string {
 
 function maskApiKeys(keys: string): string {
   if (!keys) return '';
-  return keys.split(',').map(key => maskApiKey(key.trim())).join(', ');
+  return keys
+    .split(',')
+    .map((key) => maskApiKey(key.trim()))
+    .join(', ');
 }
 
 const LOGIN_HTML_TEMPLATE = `<!DOCTYPE html>
@@ -527,9 +532,9 @@ const LOGIN_HTML_TEMPLATE = `<!DOCTYPE html>
       passwordInput.setAttribute('type', type);
       
       if (type === 'text') {
-        toggleBtn.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21\" /></svg>';
+        toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>';
       } else {
-        toggleBtn.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\" /><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\" /></svg>';
+        toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>';
       }
     });
   </script>
@@ -1482,9 +1487,9 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
         input.setAttribute('type', type);
         
         if (type === 'text') {
-          btn.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21\" /></svg>';
+          btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>';
         } else {
-          btn.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\" /><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\" /></svg>';
+          btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>';
         }
       });
     });
@@ -1622,6 +1627,9 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  // Apply MCP authentication middleware (skip for admin/health endpoints)
+  app.use(authenticateMCP);
+
   // Custom Cookie Parser Middleware
   app.use((req: Request, _res: Response, next) => {
     (req as any).cookies = {};
@@ -1641,23 +1649,23 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
   // Public health and compatibility endpoints
   app.get('/health', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'coderecall-mcp-http' });
+    res.json({ status: 'ok', service: 'ace-mcp-http' });
   });
 
   app.get('/get-models', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'coderecall-mcp-http', version: '1.0.0' });
+    res.json({ status: 'ok', service: 'ace-mcp-http', version: '1.0.0' });
   });
 
   app.post('/get-models', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'coderecall-mcp-http', version: '1.0.0' });
+    res.json({ status: 'ok', service: 'ace-mcp-http', version: '1.0.0' });
   });
 
   app.get('/augment/get-models', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'coderecall-mcp-http', version: '1.0.0' });
+    res.json({ status: 'ok', service: 'ace-mcp-http', version: '1.0.0' });
   });
 
   app.post('/augment/get-models', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'coderecall-mcp-http', version: '1.0.0' });
+    res.json({ status: 'ok', service: 'ace-mcp-http', version: '1.0.0' });
   });
 
   // Folder browser API
@@ -1679,8 +1687,8 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
       const files = fs.readdirSync(currentPath, { withFileTypes: true });
       const dirs = files
-        .filter(f => f.isDirectory() && !f.name.startsWith('.'))
-        .map(f => f.name)
+        .filter((f) => f.isDirectory() && !f.name.startsWith('.'))
+        .map((f) => f.name)
         .sort();
 
       const parentPath = path.dirname(currentPath);
@@ -1688,7 +1696,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
       res.json({
         currentPath,
         parentPath,
-        directories: dirs
+        directories: dirs,
       });
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
@@ -1756,7 +1764,10 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
     // Replace escaped config values
     html = html
-      .replace(/\{\{embeddingsApiKeys\}\}/g, escapeHtml(maskApiKeys(process.env.EMBEDDINGS_API_KEYS || '')))
+      .replace(
+        /\{\{embeddingsApiKeys\}\}/g,
+        escapeHtml(maskApiKeys(process.env.EMBEDDINGS_API_KEYS || '')),
+      )
       .replace(/\{\{embeddingsBaseUrl\}\}/g, escapeHtml(process.env.EMBEDDINGS_BASE_URL || ''))
       .replace(/\{\{embeddingsModel\}\}/g, escapeHtml(process.env.EMBEDDINGS_MODEL || ''))
       .replace(/\{\{rerankApiKeys\}\}/g, escapeHtml(maskApiKeys(process.env.RERANK_API_KEYS || '')))
@@ -1775,7 +1786,10 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
 
     if (password && verifyAdminPassword(password, config.password!)) {
       const sessionToken = generateSessionToken(config.password!);
-      res.setHeader('Set-Cookie', 'ace_session=' + encodeURIComponent(sessionToken) + '; Path=/; HttpOnly; Max-Age=86400');
+      res.setHeader(
+        'Set-Cookie',
+        'ace_session=' + encodeURIComponent(sessionToken) + '; Path=/; HttpOnly; Max-Age=86400',
+      );
       return res.redirect('/');
     } else {
       return res.redirect('/?error=1');
@@ -1810,17 +1824,17 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
     } = req.body;
 
     const updates: Record<string, string> = {};
-    
+
     if (workspace_path) {
       updates.WORKSPACE_PATH = workspace_path;
     }
-    
+
     if (embeddings_api_keys !== undefined && !embeddings_api_keys.includes('*')) {
       updates.EMBEDDINGS_API_KEYS = embeddings_api_keys;
     }
     if (embeddings_base_url) updates.EMBEDDINGS_BASE_URL = embeddings_base_url;
     if (embeddings_model) updates.EMBEDDINGS_MODEL = embeddings_model;
-    
+
     if (rerank_api_keys !== undefined && !rerank_api_keys.includes('*')) {
       updates.RERANK_API_KEYS = rerank_api_keys;
     }
@@ -1840,10 +1854,158 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
     res.redirect('/?success=true');
   });
 
-  // Mount MCP endpoints directly (no /mcp prefix)
-  const transport = new StreamableHTTPServerTransport('/', server);
-  const mcpApp = createMcpExpressApp(server);
-  app.use('/', mcpApp);
+  // Setup Streamable HTTPServer Transport
+  const transport = new StreamableHTTPServerTransport();
+
+  server.connect(transport).catch((err) => {
+    logger.error({ error: err.message }, 'Failed to connect server to transport');
+  });
+
+  // ========================================
+  // MCP Session & SSE Endpoints
+  // ========================================
+
+  /**
+   * POST /mcp/session - Create new MCP session (authenticated)
+   */
+  app.post('/mcp/session', requireAuth, (req: Request, res: Response) => {
+    const auth = getAuthUser(req);
+    if (!auth) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    try {
+      const session = sessionManager.createSession({
+        userId: auth.userId,
+        tokenId: auth.tokenId,
+      });
+
+      res.json({
+        sessionId: session.id,
+        userId: session.userId,
+        createdAt: session.createdAt,
+        sseEndpoint: `/mcp/sse?sessionId=${session.id}`,
+        mcpEndpoint: '/mcp',
+      });
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Failed to create session');
+      res.status(500).json({ error: 'Failed to create session' });
+    }
+  });
+
+  /**
+   * GET /mcp/sse - SSE connection endpoint
+   */
+  app.get('/mcp/sse', requireAuth, (req: Request, res: Response) => {
+    const sessionId = req.query.sessionId as string;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Missing sessionId parameter' });
+    }
+
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found or expired' });
+    }
+
+    // Verify session belongs to authenticated user
+    const auth = getAuthUser(req);
+    if (!auth || session.userId !== auth.userId) {
+      return res.status(403).json({ error: 'Session does not belong to authenticated user' });
+    }
+
+    // Setup SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+    // Attach SSE to session
+    if (!sessionManager.attachSSE(sessionId, res)) {
+      return res.status(500).json({ error: 'Failed to attach SSE' });
+    }
+
+    // Send initial connected event
+    sessionManager.sendSSE(sessionId, 'connected', {
+      sessionId,
+      timestamp: Date.now(),
+      message: 'SSE connection established',
+    });
+
+    logger.info({ sessionId, userId: session.userId }, 'SSE connection established');
+  });
+
+  /**
+   * DELETE /mcp/session/:sessionId - Destroy session
+   */
+  app.delete('/mcp/session/:sessionId', requireAuth, (req: Request, res: Response) => {
+    const sessionId = req.params.sessionId;
+    const session = sessionManager.getSession(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Verify ownership
+    const auth = getAuthUser(req);
+    if (!auth || session.userId !== auth.userId) {
+      return res.status(403).json({ error: 'Cannot destroy session owned by another user' });
+    }
+
+    const destroyed = sessionManager.destroySession(sessionId);
+    res.json({ success: destroyed });
+  });
+
+  /**
+   * GET /mcp/sessions - List user sessions
+   */
+  app.get('/mcp/sessions', requireAuth, (req: Request, res: Response) => {
+    const auth = getAuthUser(req);
+    if (!auth) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const sessions = sessionManager.getUserSessions(auth.userId);
+
+    res.json({
+      sessions: sessions.map((s) => ({
+        id: s.id,
+        userId: s.userId,
+        createdAt: s.createdAt,
+        lastActivity: s.lastActivity,
+        isConnected: s.isConnected,
+      })),
+    });
+  });
+
+  /**
+   * GET /mcp/stats - Session statistics (authenticated)
+   */
+  app.get('/mcp/stats', requireAuth, (req: Request, res: Response) => {
+    const stats = sessionManager.getStats();
+    res.json(stats);
+  });
+
+  /**
+   * POST /mcp - MCP JSON-RPC endpoint (authenticated)
+   */
+  app.all('/mcp', requireAuth, async (req: Request, res: Response) => {
+    try {
+      // Update session activity if sessionId provided
+      const sessionId = req.headers['x-session-id'] as string;
+      if (sessionId) {
+        const session = sessionManager.getSession(sessionId);
+        if (session) {
+          sessionManager.updateActivity(sessionId);
+        }
+      }
+
+      await transport.handleRequest(req, res, req.body);
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Error handling MCP request');
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
   return app;
 }

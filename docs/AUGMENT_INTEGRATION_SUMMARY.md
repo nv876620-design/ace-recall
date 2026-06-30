@@ -1,4 +1,4 @@
-# ✅ CodeRecall + Augment BYOK Integration - COMPLETED
+# ✅ ACE + Augment BYOK Integration - COMPLETED
 
 ## Status: Implementation Complete ✅
 
@@ -11,7 +11,7 @@ Tất cả code đã được implement và sẵn sàng để build & test.
 ### Integration Modules (trong Augment BYOK)
 
 ```
-D:\MCP\Augment_BYOK_gagmeng\payload\extension\out\byok\integrations\coderecall\
+D:\MCP\Augment_BYOK_gagmeng\payload\extension\out\byok\integrations\ace\
 ├── index.js                  # Main entry point (185 lines)
 ├── mcp-client.js            # MCP client (213 lines)
 ├── context-injector.js      # Context injection (152 lines)  
@@ -22,27 +22,27 @@ D:\MCP\Augment_BYOK_gagmeng\payload\extension\out\byok\integrations\coderecall\
 
 ```
 payload/extension/out/byok/runtime/shim/byok-chat/index.js
-  + Added CodeRecall context injection (18 lines added)
+  + Added ACE context injection (18 lines added)
   + Backup: index.js.backup
 
 payload/extension/out/byok/config/default-config.js
-  + Added coderecall config section (7 lines added)
+  + Added ace config section (7 lines added)
   + Backup: default-config.js.backup
 ```
 
 ### Documentation
 
 ```
-D:\MCP\CodeRecall\docs\
-├── AUGMENT_BYOK_CODERECALL_INTEGRATION.md  # Technical design (550+ lines)
+D:\MCP\ACE\docs\
+├── AUGMENT_BYOK_ACE_INTEGRATION.md  # Technical design (550+ lines)
 └── AUGMENT_BYOK_INTEGRATION.md              # Usage guide
 
-D:\MCP\CodeRecall\scripts\
+D:\MCP\ACE\scripts\
 ├── augment-integration-quickstart.js        # Quick start guide
 └── test-augment-integration.js              # Test script
 
 D:\MCP\Augment_BYOK_gagmeng\
-└── CODERECALL_INTEGRATION_README.md         # Installation guide
+└── ACE_INTEGRATION_README.md         # Installation guide
 ```
 
 ---
@@ -60,12 +60,12 @@ D:\MCP\Augment_BYOK_gagmeng\
 └─────────────────┬───────────────────────────────────┘
                   ↓
 ┌─────────────────────────────────────────────────────┐
-│  CodeRecall MCP: indexRepository(path)              │
-│  → mcp-client.js spawns "coderecall mcp"           │
+│  ACE MCP: indexRepository(path)              │
+│  → mcp-client.js spawns "ace mcp"           │
 └─────────────────┬───────────────────────────────────┘
                   ↓
 ┌─────────────────────────────────────────────────────┐
-│  CodeRecall indexes codebase locally                │
+│  ACE indexes codebase locally                │
 │  (LanceDB + SQLite + Embeddings)                    │
 └─────────────────────────────────────────────────────┘
 
@@ -77,14 +77,14 @@ D:\MCP\Augment_BYOK_gagmeng\
 └─────────────────┬───────────────────────────────────┘
                   ↓
 ┌─────────────────────────────────────────────────────┐
-│  injectCodeRecallContext()                          │
+│  injectACEContext()                          │
 │  → context-injector.js                              │
 │    • Extract query from message                     │
 │    • Extract technical terms                        │
 └─────────────────┬───────────────────────────────────┘
                   ↓
 ┌─────────────────────────────────────────────────────┐
-│  CodeRecall MCP: searchCodebase(query)              │
+│  ACE MCP: searchCodebase(query)              │
 │  → mcp-client.js                                    │
 │    • Semantic search với embeddings                 │
 │    • Return relevant code chunks                    │
@@ -101,7 +101,7 @@ D:\MCP\Augment_BYOK_gagmeng\
 └─────────────────┬───────────────────────────────────┘
                   ↓
 ┌─────────────────────────────────────────────────────┐
-│  LLM response với code insights từ CodeRecall       │
+│  LLM response với code insights từ ACE       │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -129,9 +129,9 @@ Command Palette: `BYOK: Open Config Panel`
 
 ```json
 {
-  "coderecall": {
+  "ace": {
     "enabled": true,
-    "mcpServerPath": "coderecall",
+    "mcpServerPath": "ace",
     "mcpServerArgs": ["mcp"],
     "autoIndex": true,
     "injectContext": true
@@ -144,7 +144,7 @@ Save → `BYOK: Enable`
 ### 4. Test
 
 1. Open a code folder
-2. Wait for "CodeRecall: Index triggered" log
+2. Wait for "ACE: Index triggered" log
 3. Chat: "How does authentication work?"
 4. Verify response includes relevant code
 
@@ -154,7 +154,7 @@ Save → `BYOK: Enable`
 
 ### 1. MCP Client (`mcp-client.js`)
 
-- ✅ Spawn CodeRecall MCP server
+- ✅ Spawn ACE MCP server
 - ✅ JSON-RPC communication
 - ✅ Request/response handling với timeout
 - ✅ Error handling và reconnection
@@ -164,7 +164,7 @@ Save → `BYOK: Enable`
 
 - ✅ Query extraction từ Augment request
 - ✅ Technical terms extraction (heuristic)
-- ✅ CodeRecall search với semantic search
+- ✅ ACE search với semantic search
 - ✅ Result formatting
 - ✅ Injection vào `selected_code` field
 - ✅ Graceful fallback on errors
@@ -201,7 +201,7 @@ User query → Augment → Cloud context → LLM
 ### After Integration
 
 ```
-User query → Augment → CodeRecall local search → LLM
+User query → Augment → ACE local search → LLM
                               ↓
                     Semantic code search
                     Full codebase context
@@ -216,21 +216,21 @@ User query → Augment → CodeRecall local search → LLM
 ### Unit Test
 
 ```bash
-node D:\MCP\CodeRecall\scripts\test-augment-integration.js
+node D:\MCP\ACE\scripts\test-augment-integration.js
 ```
 
 ### Integration Test
 
 1. Build VSIX
 2. Install in VS Code
-3. Open CodeRecall project
+3. Open ACE project
 4. Chat: "Explain the MCP server implementation"
 5. Verify response cites actual code
 
 ### Debug
 
 VS Code Output Panel → "Augment"
-- Look for "CodeRecall:" logs
+- Look for "ACE:" logs
 - Check for errors
 
 ---
@@ -297,8 +297,8 @@ Backups Created: 2
 
 | Document | Purpose | Location |
 |----------|---------|----------|
-| Technical Design | Architecture & implementation | `docs/AUGMENT_BYOK_CODERECALL_INTEGRATION.md` |
-| Installation Guide | Setup steps | `CODERECALL_INTEGRATION_README.md` |
+| Technical Design | Architecture & implementation | `docs/AUGMENT_BYOK_ACE_INTEGRATION.md` |
+| Installation Guide | Setup steps | `ACE_INTEGRATION_README.md` |
 | Quick Start | Fast setup | `scripts/augment-integration-quickstart.js` |
 | Test Script | Module testing | `scripts/test-augment-integration.js` |
 
@@ -344,7 +344,7 @@ npm run build:vsix
 ```
 
 **Expected Result:**
-Augment sẽ sử dụng CodeRecall để search codebase locally thay vì gửi context lên cloud, mang lại privacy tốt hơn và context chính xác hơn cho LLM.
+Augment sẽ sử dụng ACE để search codebase locally thay vì gửi context lên cloud, mang lại privacy tốt hơn và context chính xác hơn cho LLM.
 
 ---
 

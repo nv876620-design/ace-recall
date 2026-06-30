@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Quick Setup Script - CodeRecall MCP + Augment-BYOK
+ * Quick Setup Script - ACE MCP + Augment-BYOK
  *
- * Tự động generate config cho Augment-BYOK với CodeRecall MCP server
+ * Tự động generate config cho Augment-BYOK với ACE MCP server
  */
 
 const fs = require('fs');
@@ -25,7 +25,7 @@ function prompt(question) {
 
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║  CodeRecall MCP + Augment-BYOK - Quick Setup             ║');
+  console.log('║  ACE MCP + Augment-BYOK - Quick Setup                    ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   // Get API key
@@ -48,29 +48,29 @@ async function main() {
     defaultModel = 'gpt-4-turbo';
   }
 
-  // Get CodeRecall path
-  console.log('\n📂 Step 2: CodeRecall Path\n');
-  const coderecallPath = path.join(__dirname, '..', 'dist', 'index.js');
-  const coderecallExists = fs.existsSync(coderecallPath);
+  // Get ACE path
+  console.log('\n📂 Step 2: ACE Path\n');
+  const acePath = path.join(__dirname, '..', 'dist', 'index.js');
+  const aceExists = fs.existsSync(acePath);
 
-  console.log(`Default: ${coderecallPath}`);
-  console.log(`Status: ${coderecallExists ? '✅ Found' : '❌ Not found'}`);
+  console.log(`Default: ${acePath}`);
+  console.log(`Status: ${aceExists ? '✅ Found' : '❌ Not found'}`);
 
-  if (!coderecallExists) {
-    console.error('\n❌ CodeRecall not built!');
-    console.error('Run: cd D:\\MCP\\CodeRecall && pnpm build\n');
+  if (!aceExists) {
+    console.error('\n❌ ACE not built!');
+    console.error('Run: cd D:\\MCP\\Awesome-Context-Engineering && pnpm build\n');
     rl.close();
     process.exit(1);
   }
 
   const customPath = await prompt('\nUse custom path? (Enter to use default, or type path): ');
-  const finalPath = customPath.trim() || coderecallPath;
+  const finalPath = customPath.trim() || acePath;
 
   // Get inject position
   console.log('\n⚙️  Step 3: Inject Mode\n');
-  console.log('1. replace  - Skip Augment indexing, use ONLY CodeRecall (Recommended)');
-  console.log('2. before   - CodeRecall → Augment context → LLM (additive)');
-  console.log('3. after    - Augment context → CodeRecall → LLM (supplementary)');
+  console.log('1. replace  - Skip Augment indexing, use ONLY ACE (Recommended)');
+  console.log('2. before   - ACE → Augment context → LLM (additive)');
+  console.log('3. after    - Augment context → ACE → LLM (supplementary)');
 
   const modeChoice = await prompt('\nChoose mode (1-3, default=1): ');
   const injectPosition =
@@ -88,7 +88,7 @@ async function main() {
       injectPosition: injectPosition,
       servers: [
         {
-          name: 'coderecall',
+          name: 'ace',
           command: 'node',
           args: [
             finalPath.replace(/\\/g, '\\\\'), // Escape backslashes for Windows
@@ -130,7 +130,7 @@ async function main() {
   fs.writeFileSync(augmentByokPath, JSON.stringify(config, null, 2), 'utf8');
   console.log(`✅ Config written to: ${augmentByokPath}\n`);
 
-  // Write copy to CodeRecall repo for backup
+  // Write copy to ACE repo for backup
   const backupPath = path.join(__dirname, 'augment-byok-config-backup.json');
   fs.writeFileSync(backupPath, JSON.stringify(config, null, 2), 'utf8');
   console.log(`✅ Backup written to: ${backupPath}\n`);
@@ -143,7 +143,7 @@ async function main() {
   console.log(`API Key:         ${apiKey.slice(0, 10)}...${apiKey.slice(-4)}`);
   console.log(`Models:          ${models.join(', ')}`);
   console.log(`Default Model:   ${defaultModel}`);
-  console.log(`MCP Server:      coderecall`);
+  console.log(`MCP Server:      ace`);
   console.log(`MCP Command:     node ${finalPath}`);
   console.log(`Inject Position: ${injectPosition}`);
   console.log('');

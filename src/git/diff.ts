@@ -49,7 +49,9 @@ export function getStagedDiff(repoPath: string): GitDiffResult {
     });
 
     // Parse stats
-    const statsMatch = diffOutput.match(/(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?/);
+    const statsMatch = diffOutput.match(
+      /(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?/,
+    );
     const stats = {
       filesChanged: statsMatch ? Number.parseInt(statsMatch[1], 10) : stagedFiles.length,
       insertions: statsMatch?.[2] ? Number.parseInt(statsMatch[2], 10) : 0,

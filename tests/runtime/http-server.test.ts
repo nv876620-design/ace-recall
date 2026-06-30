@@ -85,7 +85,7 @@ describe('HTTP Server Tests', { concurrency: 1 }, () => {
       assert.equal(response.statusCode, 200);
       const data = JSON.parse(response.body);
       assert.equal(data.status, 'ok');
-      assert.equal(data.service, 'coderecall-mcp-http');
+      assert.equal(data.service, 'ace-mcp-http');
     } finally {
       await new Promise<void>((resolve) => {
         server.close(() => resolve());
@@ -111,7 +111,7 @@ describe('HTTP Server Tests', { concurrency: 1 }, () => {
       assert.equal(response.statusCode, 200);
       const data = JSON.parse(response.body);
       assert.equal(data.status, 'ok');
-      assert.equal(data.service, 'coderecall-mcp-http');
+      assert.equal(data.service, 'ace-mcp-http');
       assert.equal(data.version, '1.0.0');
     } finally {
       await new Promise<void>((resolve) => {
@@ -140,7 +140,7 @@ describe('HTTP Server Tests', { concurrency: 1 }, () => {
       assert.equal(response.statusCode, 200);
       const data = JSON.parse(response.body);
       assert.equal(data.status, 'ok');
-      assert.equal(data.service, 'coderecall-mcp-http');
+      assert.equal(data.service, 'ace-mcp-http');
       assert.equal(data.version, '1.0.0');
     } finally {
       await new Promise<void>((resolve) => {

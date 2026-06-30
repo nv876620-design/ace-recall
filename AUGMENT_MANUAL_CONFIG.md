@@ -1,4 +1,4 @@
-# 🔧 Cấu hình Manual - Augment BYOK + CodeRecall
+# 🔧 Cấu hình Manual - Augment BYOK + ACE
 
 ## Bước 1: Tạo Config File
 
@@ -31,11 +31,11 @@ Paste nội dung sau vào file `byok-config.json`:
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
     "mcpServerArgs": [
-      "D:\\MCP\\CodeRecall\\dist\\index.js",
+      "D:\\MCP\\ACE\\dist\\index.js",
       "mcp"
     ],
     "autoIndex": false,
@@ -59,16 +59,16 @@ Paste nội dung sau vào file `byok-config.json`:
 1. **API Key**: Thay `sk-ant-YOUR_API_KEY_HERE` bằng key thật
    - Lấy từ: https://console.anthropic.com/settings/keys
 
-2. **CodeRecall Path**: Update `mcpServerArgs[0]`
+2. **ACE Path**: Update `mcpServerArgs[0]`
    
    **Windows** (escape backslashes):
    ```json
-   "D:\\MCP\\CodeRecall\\dist\\index.js"
+   "D:\\MCP\\ACE\\dist\\index.js"
    ```
    
    **Linux/Mac**:
    ```json
-   "/home/username/CodeRecall/dist/index.js"
+   "/home/username/ACE/dist/index.js"
    ```
 
 ---
@@ -158,10 +158,10 @@ cat ~/.augment/byok-config.json
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
-    "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"],
+    "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"],
     "autoIndex": false,
     "injectContext": true
   },
@@ -179,10 +179,10 @@ cat ~/.augment/byok-config.json
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
-    "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"],
+    "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"],
     "autoIndex": false,
     "injectContext": true
   },
@@ -200,10 +200,10 @@ cat ~/.augment/byok-config.json
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
-    "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"],
+    "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"],
     "autoIndex": false,
     "injectContext": true
   },
@@ -226,15 +226,15 @@ cat ~/.augment/byok-config.json
 
 ## 🔍 Config Options Explained
 
-### CodeRecall Section:
+### ACE Section:
 
 ```json
 {
-  "coderecall": {
-    "enabled": true,              // Bật CodeRecall integration
+  "ace": {
+    "enabled": true,              // Bật ACE integration
     "mcpServerPath": "node",      // Command để spawn MCP server
     "mcpServerArgs": [            // Arguments cho command
-      "D:\\MCP\\CodeRecall\\dist\\index.js",
+      "D:\\MCP\\ACE\\dist\\index.js",
       "mcp"
     ],
     "autoIndex": false,           // Không dùng (Augment indexing disabled)
@@ -250,24 +250,24 @@ cat ~/.augment/byok-config.json
 ```json
 {
   "mcpServerPath": "node",
-  "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"]
+  "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"]
 }
 ```
 
 #### Option 2: Global command (cần link trước)
 ```json
 {
-  "mcpServerPath": "coderecall",
+  "mcpServerPath": "ace",
   "mcpServerArgs": ["mcp"]
 }
 ```
-Requires: `cd D:\MCP\CodeRecall && pnpm link --global`
+Requires: `cd D:\MCP\ACE && pnpm link --global`
 
 #### Option 3: tsx + TypeScript source
 ```json
 {
   "mcpServerPath": "tsx",
-  "mcpServerArgs": ["D:\\MCP\\CodeRecall\\src\\index.ts", "mcp"]
+  "mcpServerArgs": ["D:\\MCP\\ACE\\src\\index.ts", "mcp"]
 }
 ```
 Requires: `npm install -g tsx`
@@ -321,11 +321,11 @@ touch ~/.augment/byok-config.json
 **Fix**: Get absolute path:
 ```bash
 # Windows
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 echo %cd%\dist\index.js
 
 # Linux/Mac
-cd ~/CodeRecall
+cd ~/ACE
 echo $(pwd)/dist/index.js
 ```
 
@@ -339,12 +339,12 @@ Copy path vào config với proper escaping.
 
 **Windows**:
 ```powershell
-node D:\MCP\CodeRecall\dist\index.js mcp
+node D:\MCP\ACE\dist\index.js mcp
 ```
 
 **Linux/Mac**:
 ```bash
-node ~/CodeRecall/dist/index.js mcp
+node ~/ACE/dist/index.js mcp
 ```
 
 Nếu chạy OK, sẽ thấy:
@@ -361,10 +361,10 @@ Press `Ctrl+C` để thoát.
 3. Ask: "What files are in this project?"
 4. Check Output → Augment:
    ```
-   [INFO] CodeRecall: Connecting to MCP server
-   [INFO] CodeRecall: Connected successfully
-   [INFO] CodeRecall: Searching...
-   [INFO] CodeRecall: Injecting context { chunks: 3 }
+   [INFO] ACE: Connecting to MCP server
+   [INFO] ACE: Connected successfully
+   [INFO] ACE: Searching...
+   [INFO] ACE: Injecting context { chunks: 3 }
    ```
 
 ---
@@ -376,10 +376,10 @@ Press `Ctrl+C` để thoát.
 mkdir -p ~/.augment && cat > ~/.augment/byok-config.json << 'EOF'
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
-    "mcpServerArgs": ["/path/to/CodeRecall/dist/index.js", "mcp"],
+    "mcpServerArgs": ["/path/to/ACE/dist/index.js", "mcp"],
     "autoIndex": false,
     "injectContext": true
   },
@@ -398,7 +398,7 @@ cat ~/.augment/byok-config.json
 code ~/.augment/byok-config.json
 ```
 
-**⚠️ Remember**: Thay `YOUR_KEY` và `/path/to/CodeRecall`
+**⚠️ Remember**: Thay `YOUR_KEY` và `/path/to/ACE`
 
 ---
 
@@ -411,7 +411,7 @@ code ~/.augment/byok-config.json
 5. ✅ BYOK enabled
 6. 📝 Test: Open folder → Chat → Check logs
 
-**If everything works**: Augment sẽ dùng CodeRecall để search code thay vì native indexing
+**If everything works**: Augment sẽ dùng ACE để search code thay vì native indexing
 
 ---
 

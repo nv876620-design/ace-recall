@@ -1,5 +1,5 @@
 ---
-name: coderecall-search
+name: ace-search
 description: >-
   Semantic code search for ANY non-trivial code exploration task. Use as the
   DEFAULT when you need to find code by describing functionality, understand how a
@@ -10,7 +10,7 @@ description: >-
   Read) or need literal text matching (use grep).
 ---
 
-# CodeRecall 语义搜索
+# ACE 语义搜索
 
 ## 核心原则
 
@@ -20,10 +20,10 @@ description: >-
 
 ```bash
 # 最常用：纯语义搜索
-coderecall search --information-request "How is the user authentication flow implemented"
+ace search --information-request "How is the user authentication flow implemented"
 
 # 仅搜索源码（排除 markdown/json/yaml/toml/xml 等非代码文件）
-coderecall search --information-request "Error handling patterns" --source-code-only
+ace search --information-request "Error handling patterns" --source-code-only
 
 ```
 
@@ -59,7 +59,7 @@ coderecall search --information-request "Error handling patterns" --source-code-
 
 ### 文件分类与过滤
 
-CodeRecall 将文件分为三类：
+ACE 将文件分为三类：
 
 | 类别 | 扩展名 | 说明 |
 |------|--------|------|
@@ -71,7 +71,7 @@ CodeRecall 将文件分为三类：
 - `--include-languages`：白名单，可与 `--source-code-only` 组合（取交集）
 - `--exclude-languages`：黑名单，可与 `--source-code-only` 组合
 
-> 索引无需手动处理。`coderecall search` 入口自动调用 `ensureIndexed()`：首次全量索引、后续增量索引。仅当自动索引失败时才需人工介入。
+> 索引无需手动处理。`ace search` 入口自动调用 `ensureIndexed()`：首次全量索引、后续增量索引。仅当自动索引失败时才需人工介入。
 
 ## 常见错误
 
@@ -89,8 +89,8 @@ CodeRecall 将文件分为三类：
 
 若提示配置缺失：
 ```bash
-coderecall init               # 创建 ~/.coderecall/.env
-vim ~/.coderecall/.env        # 填写 API Key
+ace init               # 创建 ~/.ace/.env
+vim ~/.ace/.env        # 填写 API Key
 ```
 
 最小配置：
@@ -107,24 +107,24 @@ RERANK_MODEL=BAAI/bge-reranker-v2-m3
 
 仅当日志/报错出现 scan 失败、写入失败、锁超时时才人工介入：
 ```bash
-coderecall index               # 手动触发索引
-coderecall index . --force     # 强制重建
-coderecall doctor .            # 审计向量索引与 FTS 一致性
-coderecall doctor . --repair   # 修复孤儿记录
+ace index               # 手动触发索引
+ace index . --force     # 强制重建
+ace doctor .            # 审计向量索引与 FTS 一致性
+ace doctor . --repair   # 修复孤儿记录
 ```
 
 ### 辅助命令
 
 ```bash
-coderecall doctor .                      # 索引健康检查
-coderecall feedback . --days 7 --top 10  # 检索反馈摘要
+ace doctor .                      # 索引健康检查
+ace feedback . --days 7 --top 10  # 检索反馈摘要
 ```
 
 ## 高级使用
 ```bash
 # 限定语言
-coderecall search --information-request "Database migration logic" --include-languages "typescript,sql"
+ace search --information-request "Database migration logic" --include-languages "typescript,sql"
 
 # 组合过滤：源码中去掉脚本语言
-coderecall search --information-request "Build pipeline entry points" --source-code-only --exclude-languages "shell,powershell"
+ace search --information-request "Build pipeline entry points" --source-code-only --exclude-languages "shell,powershell"
 ```

@@ -1,10 +1,10 @@
-# vibervn-context-engine Inspiration for CodeRecall
+# vibervn-context-engine Inspiration for ACE
 
 Các ý tưởng từ [vibervn-context-engine](https://github.com/nullmastermind/vibervn-context-engine) - một Rust-based context engine với performance cao và features tiên tiến.
 
 ## 🎯 So sánh Tech Stack
 
-| Aspect | CodeRecall | vibervn-context-engine |
+| Aspect | ACE | vibervn-context-engine |
 |--------|------------|------------------------|
 | Language | TypeScript/Node.js | **Rust** |
 | Vector DB | LanceDB | **In-memory vector index** |
@@ -32,7 +32,7 @@ Các ý tưởng từ [vibervn-context-engine](https://github.com/nullmastermind
 - Answers "Who calls this function?" and "What does this call?"
 - Much better than just returning isolated chunks
 
-**Implementation approach for CodeRecall:**
+**Implementation approach for ACE:**
 
 ```typescript
 // src/search/CallGraphExpander.ts
@@ -264,11 +264,11 @@ app.get('/api/index/progress', (req, res) => {
 
 // Settings endpoints
 app.get('/api/settings', async (req, res) => {
-  // Load from ~/.coderecall/settings.json
+  // Load from ~/.ace/settings.json
 });
 
 app.post('/api/settings', async (req, res) => {
-  // Save to ~/.coderecall/settings.json
+  // Save to ~/.ace/settings.json
 });
 
 // Index explorer

@@ -1,6 +1,6 @@
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║  ✅ AUGMENT BYOK + CODERECALL INTEGRATION COMPLETE                ║
+║  ✅ AUGMENT BYOK + ACE INTEGRATION COMPLETE                ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
@@ -41,7 +41,7 @@
 
 3. Configure:
    Command: "BYOK: Open Config Panel"
-   Enable coderecall section
+   Enable ace section
 
 4. Test:
    Open folder → Chat with code questions
@@ -52,8 +52,8 @@
 
 Main Docs:
   → docs/AUGMENT_INTEGRATION_SUMMARY.md
-  → CODERECALL_INTEGRATION_README.md (in BYOK repo)
-  → docs/AUGMENT_BYOK_CODERECALL_INTEGRATION.md
+  → ACE_INTEGRATION_README.md (in BYOK repo)
+  → docs/AUGMENT_BYOK_ACE_INTEGRATION.md
 
 Test Scripts:
   → scripts/test-augment-integration.js
@@ -64,7 +64,7 @@ Test Scripts:
 🎯 WHAT IT DOES
 
 Before: Augment → Cloud context → LLM
-After:  Augment → CodeRecall local search → LLM
+After:  Augment → ACE local search → LLM
 
 Benefits:
   ✓ 100% Privacy (code stays local)

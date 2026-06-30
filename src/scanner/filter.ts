@@ -25,7 +25,7 @@ async function generateConfigHash(rootPath: string): Promise<string> {
   }
 
   await addFileHash(path.join(rootPath, '.gitignore'));
-  await addFileHash(path.join(rootPath, '.coderecallinclude'));
+  await addFileHash(path.join(rootPath, '.aceinclude'));
 
   // 加上环境变量 IGNORE_PATTERNS
   const envExcludePatterns = process.env.IGNORE_PATTERNS || '';
@@ -65,8 +65,8 @@ export async function initFilter(rootPath: string): Promise<void> {
   const includeIg = ignore();
   includeIg.add(getIncludePatterns());
 
-  // 加载 .coderecallinclude
-  const includePath = path.join(rootPath, '.coderecallinclude');
+  // 加载 .aceinclude
+  const includePath = path.join(rootPath, '.aceinclude');
   try {
     await fs.access(includePath);
     includeIg.add(await fs.readFile(includePath, 'utf-8'));

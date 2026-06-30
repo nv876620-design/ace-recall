@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test CodeRecall Integration
+ * Test ACE Integration
  *
  * Test MCP client và context injection
  */
@@ -11,19 +11,19 @@ const path = require("path");
 const byokRoot = path.join(__dirname, "..", "..", "Augment_BYOK_gagmeng");
 const integrationPath = path.join(
   byokRoot,
-  "payload/extension/out/byok/integrations/coderecall"
+  "payload/extension/out/byok/integrations/ace"
 );
 
-console.log("Testing CodeRecall Integration...\n");
+console.log("Testing ACE Integration...\n");
 
 async function testMCPClient() {
   console.log("1. Testing MCP Client Connection...");
 
   try {
-    const { getCodeRecallClient } = require(path.join(integrationPath, "mcp-client.js"));
+    const { getAceClient } = require(path.join(integrationPath, "mcp-client.js"));
 
-    const client = getCodeRecallClient({
-      mcpServerPath: "coderecall",
+    const client = getAceClient({
+      mcpServerPath: "ace",
       mcpServerArgs: ["mcp"],
     });
 
@@ -33,7 +33,7 @@ async function testMCPClient() {
     console.log("2. Testing Codebase Search...");
     const result = await client.searchCodebase(
       "How does authentication work?",
-      "D:/MCP/CodeRecall",
+      "D:/MCP/Awesome-Context-Engineering",
       {
         source_code_only: true,
       }
@@ -105,7 +105,7 @@ async function testWorkspaceWatcher() {
 
     resetWorkspaces();
 
-    await onWorkspaceOpened("D:/MCP/CodeRecall", {
+    await onWorkspaceOpened("D:/MCP/Awesome-Context-Engineering", {
       enabled: true,
       autoIndex: true,
     });
@@ -130,7 +130,7 @@ async function main() {
     console.log("\nNext steps:");
     console.log("  1. Build BYOK VSIX: cd D:/MCP/Augment_BYOK_gagmeng && npm run build:vsix");
     console.log("  2. Install VSIX in VS Code");
-    console.log("  3. Enable CodeRecall in BYOK Config Panel");
+    console.log("  3. Enable ACE in BYOK Config Panel");
     console.log("  4. Test with real workspace");
 
     process.exit(0);

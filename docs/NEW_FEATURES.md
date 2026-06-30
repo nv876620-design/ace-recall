@@ -1,6 +1,6 @@
 # 🚀 New Features: NotepadAI-Inspired Additions
 
-CodeRecall v0.1.7+ includes powerful new features inspired by [NotepadAI](https://github.com/nullmastermind/NotepadAI).
+ACE v0.1.7+ includes powerful new features inspired by [NotepadAI](https://github.com/nullmastermind/NotepadAI).
 
 ## ✨ Features Overview
 
@@ -21,17 +21,17 @@ Analyzes your staged git changes and generates a well-formatted commit message f
 
 ```bash
 # Basic usage (conventional commits style)
-coderecall git-msg
+ace git-msg
 
 # Different styles
-coderecall git-msg --style simple
-coderecall git-msg --style detailed
+ace git-msg --style simple
+ace git-msg --style detailed
 
 # Without detailed body
-coderecall git-msg --no-body
+ace git-msg --no-body
 
 # For a specific repository
-coderecall git-msg /path/to/repo
+ace git-msg /path/to/repo
 ```
 
 ### MCP Usage
@@ -52,7 +52,7 @@ Use the generate-commit-message tool with:
 git add src/api/auth.ts src/utils/validation.ts
 
 # 2. Generate commit message
-coderecall git-msg
+ace git-msg
 
 # Output:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -114,7 +114,7 @@ Extended message with explanation.
 The tool uses your existing API configuration:
 
 ```env
-# In ~/.coderecall/.env
+# In ~/.ace/.env
 RERANK_BASE_URL=https://api.siliconflow.cn/v1
 RERANK_API_KEYS=sk-xxx
 
@@ -150,10 +150,10 @@ Scans your project and discovers all runnable tasks from:
 
 ```bash
 # Detect tasks in current directory
-coderecall tasks
+ace tasks
 
 # Detect tasks in specific directory
-coderecall tasks /path/to/project
+ace tasks /path/to/project
 ```
 
 ### MCP Usage
@@ -168,7 +168,7 @@ Use the detect-tasks tool with:
 ### Example Output
 
 ```bash
-$ coderecall tasks
+$ ace tasks
 
 ━━━━ 检测到 15 个任务 ━━━━
 
@@ -207,7 +207,7 @@ $ coderecall tasks
 #### 1. Onboarding New Developers
 ```bash
 # "How do I build this project?"
-coderecall tasks
+ace tasks
 
 # Shows all available tasks instantly
 ```
@@ -222,7 +222,7 @@ AI: "I found 10 tasks. You can run 'pnpm test' to run tests."
 #### 3. Quick Reference
 ```bash
 # Forgot the exact command?
-coderecall tasks | grep test
+ace tasks | grep test
 
 # Output:
 #   pnpm:test        tsx tests/runtime/registry.test.ts
@@ -258,19 +258,19 @@ src/
 
 #### No Staged Changes
 ```bash
-$ coderecall git-msg
+$ ace git-msg
 Error: No staged changes found. Use `git add` first.
 ```
 
 #### Not a Git Repository
 ```bash
-$ coderecall git-msg /path/to/non-git
+$ ace git-msg /path/to/non-git
 Error: /path/to/non-git is not a git repository
 ```
 
 #### No Tasks Found
 ```bash
-$ coderecall tasks
+$ ace tasks
 未找到任何任务
 
 支持的文件: package.json, Makefile, justfile, deno.json, Cargo.toml
@@ -284,32 +284,32 @@ $ coderecall tasks
 
 1. **Interactive Task Runner**
    ```bash
-   coderecall run-task
+   ace run-task
    # Interactive picker to select and run tasks
    ```
 
 2. **Git-Aware Search**
    ```bash
-   coderecall search --only-modified
+   ace search --only-modified
    # Search only in files with uncommitted changes
    ```
 
 3. **Multi-Workspace Support**
    ```bash
-   coderecall workspace add ~/projects/app1
-   coderecall workspace add ~/projects/app2
-   coderecall workspace list
+   ace workspace add ~/projects/app1
+   ace workspace add ~/projects/app2
+   ace workspace list
    ```
 
 4. **Scheduled Indexing**
    ```bash
-   coderecall daemon start
+   ace daemon start
    # Auto-index on file changes (watch mode)
    ```
 
 5. **SSH Remote Development**
    ```bash
-   coderecall index ssh://user@host/path
+   ace index ssh://user@host/path
    # Index remote repository over SSH
    ```
 
@@ -317,18 +317,18 @@ $ coderecall tasks
 
 ## 📊 Comparison with NotepadAI
 
-| Feature | NotepadAI | CodeRecall | Notes |
+| Feature | NotepadAI | ACE | Notes |
 |---------|-----------|------------|-------|
-| AI Commit Messages | ✅ Built-in | ✅ CLI + MCP | CodeRecall uses API |
-| Task Detection | ✅ Editor UI | ✅ CLI + MCP | CodeRecall outputs text |
-| Git Integration | ✅ Full GUI | ⚠️ Basic CLI | CodeRecall focuses on indexing |
-| Terminal | ✅ Embedded PTY | ❌ N/A | CodeRecall is CLI-only |
+| AI Commit Messages | ✅ Built-in | ✅ CLI + MCP | ACE uses API |
+| Task Detection | ✅ Editor UI | ✅ CLI + MCP | ACE outputs text |
+| Git Integration | ✅ Full GUI | ⚠️ Basic CLI | ACE focuses on indexing |
+| Terminal | ✅ Embedded PTY | ❌ N/A | ACE is CLI-only |
 | Multi-Workspace | ✅ Multiple roots | 🚧 Planned | Coming in v0.2.0 |
 | SSH Remote | ✅ SFTP | 🚧 Planned | Long-term goal |
 
 **Key Difference:**
 - **NotepadAI**: Desktop editor with AI **inside**
-- **CodeRecall**: Context provider for **any** editor (via MCP)
+- **ACE**: Context provider for **any** editor (via MCP)
 
 ---
 
@@ -341,7 +341,7 @@ $ coderecall tasks
 **Solution:**
 ```bash
 # Check your .env file
-cat ~/.coderecall/.env
+cat ~/.ace/.env
 
 # Ensure these are set:
 RERANK_BASE_URL=https://api.siliconflow.cn/v1/rerank
@@ -387,7 +387,7 @@ vim src/api/auth.ts
 git add src/api/auth.ts
 
 # 3. Generate commit message
-coderecall git-msg --style conventional
+ace git-msg --style conventional
 
 # Output:
 # feat(api): implement JWT authentication
@@ -399,7 +399,7 @@ coderecall git-msg --style conventional
 git commit -m "feat(api): implement JWT authentication"
 
 # 5. Check available tasks
-coderecall tasks
+ace tasks
 
 # 6. Run tests
 pnpm test
@@ -467,6 +467,6 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 
 ## 📜 License
 
-GPL-3.0 - Same as CodeRecall
+GPL-3.0 - Same as ACE
 
 **Inspiration Credits:** Features inspired by [NotepadAI](https://github.com/nullmastermind/NotepadAI) by nullmastermind.

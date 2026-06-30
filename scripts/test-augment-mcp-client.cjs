@@ -3,7 +3,7 @@
 /**
  * Test Augment MCP Client Integration
  *
- * Verify rằng mcp-client.js có thể connect và call CodeRecall MCP server
+ * Verify rằng mcp-client.js có thể connect và call ACE MCP server
  */
 
 const path = require('path');
@@ -44,25 +44,25 @@ async function testMCPClient() {
     // Import MCP client
     const mcpClientPath = path.join(
       __dirname,
-      '../../Augment_BYOK_gagmeng/payload/extension/out/byok/integrations/coderecall/mcp-client.js'
+      '../../Augment_BYOK_gagmeng/payload/extension/out/byok/integrations/ace/mcp-client.js'
     );
 
     console.log('📦 Loading MCP client from:', mcpClientPath);
-    const { getCodeRecallClient } = require(mcpClientPath);
+    const { getAceClient } = require(mcpClientPath);
 
     // Test 1: Create client
     console.log('\n✅ Test 1: Create client instance');
 
-    // Use node to run CodeRecall from dist
-    const codeRecallPath = 'node';
-    const codeRecallArgs = [
+    // Use node to run ACE from dist
+    const acePath = 'node';
+    const aceArgs = [
       path.join(__dirname, '../dist/index.js'),
       'mcp'
     ];
 
-    const client = getCodeRecallClient({
-      mcpServerPath: codeRecallPath,
-      mcpServerArgs: codeRecallArgs
+    const client = getAceClient({
+      mcpServerPath: acePath,
+      mcpServerArgs: aceArgs
     });
     console.log('   Client created:', !!client);
 

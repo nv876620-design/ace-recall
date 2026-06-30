@@ -1,13 +1,13 @@
-# Augment BYOK Configuration for CodeRecall
+# Augment BYOK Configuration for ACE
 
-Để sử dụng CodeRecall HTTP server với Augment BYOK:
+Để sử dụng ACE HTTP server với Augment BYOK:
 
-## 1. Khởi động CodeRecall HTTP Server
+## 1. Khởi động ACE HTTP Server
 
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 pnpm build
-coderecall mcp-http --port 3000 --host 127.0.0.1
+ace mcp-http --port 3000 --host 127.0.0.1
 ```
 
 ## 2. Cấu hình trong Augment BYOK Config Panel
@@ -16,14 +16,14 @@ Thêm provider sau vào `providers[]`:
 
 ```json
 {
-  "id": "coderecall",
+  "id": "ace",
   "type": "openai_compatible",
   "baseUrl": "http://127.0.0.1:3000",
   "apiKey": "dummy-key-not-required",
   "models": [
-    "coderecall-search"
+    "ace-search"
   ],
-  "defaultModel": "coderecall-search",
+  "defaultModel": "ace-search",
   "headers": {},
   "requestDefaults": {
     "temperature": 0.0
@@ -32,8 +32,8 @@ Thêm provider sau vào `providers[]`:
 ```
 
 **Lưu ý:**
-- `baseUrl` KHÔNG cần `/v1` vì CodeRecall có endpoint riêng
-- `apiKey` có thể để bất kỳ giá trị nào vì CodeRecall không verify
+- `baseUrl` KHÔNG cần `/v1` vì ACE có endpoint riêng
+- `apiKey` có thể để bất kỳ giá trị nào vì ACE không verify
 - `/get-models` endpoint sẽ trả về info thay vì danh sách models thực sự
 
 ## 3. Test Endpoints
@@ -54,7 +54,7 @@ curl http://127.0.0.1:3000/augment/get-models
 
 Trong VS Code:
 1. `BYOK: Open Config Panel` - Mở panel cấu hình
-2. Thêm provider CodeRecall như trên
+2. Thêm provider ACE như trên
 3. `Save` config
 4. `BYOK: Enable` - Bật BYOK runtime
 5. `BYOK: Self Test` - Test tất cả endpoints
@@ -66,28 +66,28 @@ Nguyên nhân: Augment BYOK đang gọi sai URL hoặc thiếu endpoint
 
 **Giải pháp:**
 - Kiểm tra `baseUrl` trong config: `http://127.0.0.1:3000` (không có `/v1`)
-- Đảm bảo CodeRecall server đang chạy: `curl http://127.0.0.1:3000/health`
-- Xem logs của CodeRecall server
+- Đảm bảo ACE server đang chạy: `curl http://127.0.0.1:3000/health`
+- Xem logs của ACE server
 
 ### Endpoint Mapping
 
 Augment BYOK expects:
-- `/get-models` → Returns model list (CodeRecall trả về status info)
-- `/chat/completions` → OpenAI-compatible chat endpoint (CodeRecall chưa có)
-- `/augment/get-models` → Alternative endpoint (CodeRecall đã có)
+- `/get-models` → Returns model list (ACE trả về status info)
+- `/chat/completions` → OpenAI-compatible chat endpoint (ACE chưa có)
+- `/augment/get-models` → Alternative endpoint (ACE đã có)
 
 **Lưu ý quan trọng:** 
-CodeRecall HTTP server hiện tại chỉ có:
+ACE HTTP server hiện tại chỉ có:
 - `/health`
 - `/get-models` 
 - `/augment/get-models`
 - `/mcp` (MCP protocol, không phải OpenAI compatible)
 
-Nếu bạn muốn CodeRecall hoạt động như một OpenAI-compatible provider cho Augment BYOK, cần thêm endpoint `/chat/completions` hoặc `/v1/chat/completions`.
+Nếu bạn muốn ACE hoạt động như một OpenAI-compatible provider cho Augment BYOK, cần thêm endpoint `/chat/completions` hoặc `/v1/chat/completions`.
 
 ## 6. Kiến nghị
 
-CodeRecall server hiện tại chủ yếu là MCP server, không phải OpenAI-compatible API server. Để tích hợp với Augment BYOK, cần:
+ACE server hiện tại chủ yếu là MCP server, không phải OpenAI-compatible API server. Để tích hợp với Augment BYOK, cần:
 
 1. **Thêm OpenAI-compatible endpoints:**
    - `POST /v1/chat/completions`

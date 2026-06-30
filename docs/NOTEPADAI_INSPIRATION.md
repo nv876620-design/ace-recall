@@ -1,6 +1,6 @@
-# NotepadAI Inspiration for CodeRecall
+# NotepadAI Inspiration for ACE
 
-Các ý tưởng hay từ [NotepadAI](https://github.com/nullmastermind/NotepadAI) có thể áp dụng vào CodeRecall.
+Các ý tưởng hay từ [NotepadAI](https://github.com/nullmastermind/NotepadAI) có thể áp dụng vào ACE.
 
 ## 🎯 Ý tưởng có thể implement ngay
 
@@ -9,7 +9,7 @@ Các ý tưởng hay từ [NotepadAI](https://github.com/nullmastermind/NotepadA
 - AI tự động viết commit message từ staged diff
 - Tích hợp trong git commit flow
 
-**Áp dụng vào CodeRecall:**
+**Áp dụng vào ACE:**
 ```typescript
 // Thêm vào src/mcp/tools/
 export async function generateCommitMessage(
@@ -33,7 +33,7 @@ export async function generateCommitMessage(
 
 **Use cases:**
 - MCP tool: `generate-commit-message`
-- CLI: `coderecall git-msg`
+- CLI: `ace git-msg`
 - Auto-generate khi user gõ `git commit` mà chưa có message
 
 ---
@@ -44,7 +44,7 @@ export async function generateCommitMessage(
 - Hiển thị clickable run icons trong editor margin
 - Scheduled tasks (cron)
 
-**Áp dụng vào CodeRecall:**
+**Áp dụng vào ACE:**
 ```typescript
 // src/scanner/taskDetector.ts
 export interface DetectedTask {
@@ -129,7 +129,7 @@ export async function handleListTasks(args: z.infer<typeof listTasksSchema>) {
 - Mỗi workspace độc lập
 - Data directory configurable
 
-**Áp dụng vào CodeRecall:**
+**Áp dụng vào ACE:**
 ```typescript
 // src/db/workspace.ts
 export interface Workspace {
@@ -189,22 +189,22 @@ export class WorkspaceManager {
 - Portable marker file
 - Settings UI
 
-**Áp dụng vào CodeRecall:**
+**Áp dụng vào ACE:**
 ```typescript
 // src/utils/paths.ts (update)
 export function getConfigBaseDir(): string {
   // Priority order:
   // 1. CLI flag --data-dir
-  // 2. Env var CODERECALL_DATA_DIR
+  // 2. Env var ACE_DATA_DIR
   // 3. Portable marker (./portable file exists)
-  // 4. Default (~/.coderecall)
+  // 4. Default (~/.ace)
   
   const cliDataDir = process.argv.find(arg => arg.startsWith('--data-dir='));
   if (cliDataDir) {
     return path.resolve(cliDataDir.split('=')[1]);
   }
   
-  const envDataDir = process.env.CODERECALL_DATA_DIR;
+  const envDataDir = process.env.ACE_DATA_DIR;
   if (envDataDir) {
     return path.resolve(envDataDir);
   }
@@ -215,7 +215,7 @@ export function getConfigBaseDir(): string {
     return path.join(exeDir, 'data');
   }
   
-  return path.join(os.homedir(), '.coderecall');
+  return path.join(os.homedir(), '.ace');
 }
 ```
 
@@ -231,9 +231,9 @@ export function getConfigBaseDir(): string {
 - SFTP progress với conflict detection
 - Detailed progress tracking
 
-**Áp dụng vào CodeRecall:**
+**Áp dụng vào ACE:**
 
-Hiện tại CodeRecall đã có `onProgress` callback trong `scan()`, nhưng chưa đủ chi tiết.
+Hiện tại ACE đã có `onProgress` callback trong `scan()`, nhưng chưa đủ chi tiết.
 
 **Cải thiện:**
 ```typescript
@@ -268,8 +268,8 @@ export type DetailedProgressCallback = (progress: DetailedProgress) => void;
 - 3-way conflict viewer
 - Parse git directly (không shell out)
 
-**CodeRecall context:**
-- CodeRecall là **indexing/search tool**, không phải editor
+**ACE context:**
+- ACE là **indexing/search tool**, không phải editor
 - Nhưng có thể thêm git-aware features vào search:
 
 **Ý tưởng:**
@@ -311,20 +311,20 @@ export interface GitAwareSearchOptions {
 
 ### SSH Remote Development
 - NotepadAI hỗ trợ SSH + SFTP
-- CodeRecall có thể thêm:
-  - `coderecall index ssh://user@host/path`
+- ACE có thể thêm:
+  - `ace index ssh://user@host/path`
   - Remote vector store sync
 
 ### Mini-Apps (WebView Tools)
 - NotepadAI có HTML/JS mini-apps
-- CodeRecall có thể có:
+- ACE có thể có:
   - Search result visualizer (web UI)
   - Vector space explorer
   - Query debugger
 
 ### Scheduled Indexing
 - NotepadAI có scheduled tasks
-- CodeRecall có thể có:
+- ACE có thể có:
   - Auto-index on file change (watch mode)
   - Nightly full re-index
   - Incremental index every N minutes
@@ -334,14 +334,14 @@ export interface GitAwareSearchOptions {
 ## 📝 Notes
 
 - NotepadAI là C++/Qt desktop app → focus on UI/UX
-- CodeRecall là Node.js CLI/MCP tool → focus on API/integration
+- ACE là Node.js CLI/MCP tool → focus on API/integration
 - Không nên copy 100% features, chỉ lấy ý tưởng phù hợp
 
 **Core difference:**
 - NotepadAI: "Editor with AI inside"
-- CodeRecall: "AI context provider for any editor"
+- ACE: "AI context provider for any editor"
 
 **Synergy:**
 - User dùng NotepadAI (hoặc VSCode, Cursor, etc) làm editor
-- CodeRecall chạy background như MCP server
-- Editor gọi CodeRecall qua MCP để lấy context
+- ACE chạy background như MCP server
+- Editor gọi ACE qua MCP để lấy context

@@ -46,7 +46,7 @@ try {
 console.log('\n🔍 Config hiện tại:');
 console.log('  - completionUrl:', config.official?.completionUrl || 'N/A');
 console.log('  - apiToken:', config.official?.apiToken ? '(có token)' : '(rỗng)');
-console.log('  - coderecall.enabled:', config.coderecall?.enabled || false);
+console.log('  - ace.enabled:', config.ace?.enabled || false);
 
 // Fix: Remove apiToken to switch to Pure Local Mode
 let changed = false;
@@ -79,7 +79,7 @@ try {
 
   console.log('\n🔄 Tiếp theo:');
   console.log('  1. Restart VSCode');
-  console.log('  2. Chạy: D:\\MCP\\CodeRecall\\scripts\\fix-augment-indexing-loop.bat (sau khi đóng VSCode)');
+  console.log('  2. Chạy: D:\\MCP\\Awesome-Context-Engineering\\scripts\\fix-augment-indexing-loop.bat (sau khi đóng VSCode)');
   console.log('  3. Mở lại VSCode → Extension sẽ re-index sạch');
 
   console.log('\n💾 Backup file: ' + backupPath);

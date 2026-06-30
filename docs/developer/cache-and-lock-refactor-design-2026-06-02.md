@@ -2,7 +2,7 @@
 
 ## 1. 背景
 
-CodeRecall 当前已经补齐了单次检索结束后的主动释放能力：
+ACE 当前已经补齐了单次检索结束后的主动释放能力：
 
 - `SearchService.close()` 会清理当前项目的 `VectorStore`、`Indexer`、`GraphExpander`
 - `scanner/index.ts` 的 `finally` 会执行全量 `closeAllIndexers()` / `closeAllVectorStores()`

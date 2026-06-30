@@ -23,10 +23,10 @@ Config hiện tại là **HYBRID SAI**:
 {
   "official": {
     "completionUrl": "http://localhost:3000",  // Local model
-    "apiToken": "local-coderecall-bypass"      // Fake token
+    "apiToken": "local-ace-bypass"      // Fake token
   },
-  "coderecall": {
-    "enabled": false,  // CodeRecall MCP tắt
+  "ace": {
+    "enabled": false,  // ACE MCP tắt
     ...
   }
 }
@@ -72,7 +72,7 @@ Edit `C:\Users\ndnvi\AppData\Roaming\Code\User\globalStorage\augment.vscode-augm
     "completionUrl": "http://localhost:3000",
     "apiToken": ""  // XÓA token → Pure BYOK
   },
-  "coderecall": {
+  "ace": {
     "enabled": false,
     ...
   }
@@ -96,19 +96,19 @@ Nếu bạn có Augment Pro account và muốn upload lên cloud:
 }
 ```
 
-### Option 3: Enable CodeRecall MCP thay thế
+### Option 3: Enable ACE MCP thay thế
 
-Thay vì dùng Augment cloud, dùng CodeRecall local:
+Thay vì dùng Augment cloud, dùng ACE local:
 
 ```json
 {
   "official": {
     "apiToken": ""  // Tắt cloud
   },
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "replaceOfficialRetrieval": true,  // Thay thế Augment retrieval
-    "mcpServerPath": "coderecall",
+    "mcpServerPath": "ace",
     "mcpServerArgs": ["mcp"],
     "autoIndex": true,
     "injectContext": true,
@@ -123,7 +123,7 @@ Sau khi chọn giải pháp, xóa cache để reset:
 
 ```cmd
 # ĐÓNG VSCode trước!
-D:\MCP\CodeRecall\scripts\fix-augment-indexing-loop.bat
+D:\MCP\ACE\scripts\fix-augment-indexing-loop.bat
 ```
 
 ## FAQs

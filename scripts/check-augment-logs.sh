@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Quick check Augment BYOK + CodeRecall logs trong VS Code Output
+# Quick check Augment BYOK + ACE logs trong VS Code Output
 
-echo "🔍 Checking Augment BYOK + CodeRecall Integration Logs"
+echo "🔍 Checking Augment BYOK + ACE Integration Logs"
 echo "════════════════════════════════════════════════════════"
 echo ""
 
@@ -10,7 +10,7 @@ echo ""
 CONFIG_FILE="$HOME/.augment/byok-config.json"
 if [ -f "$CONFIG_FILE" ]; then
     echo "✅ Config file exists: $CONFIG_FILE"
-    echo "   CodeRecall enabled: $(grep -o '"enabled":\s*true' "$CONFIG_FILE" | wc -l)"
+    echo "   ACE enabled: $(grep -o '"enabled":\s*true' "$CONFIG_FILE" | wc -l)"
     echo ""
 else
     echo "❌ Config file NOT found: $CONFIG_FILE"
@@ -18,13 +18,13 @@ else
     echo ""
 fi
 
-# Check CodeRecall MCP server
-CODERECALL_DIST="dist/index.js"
-if [ -f "$CODERECALL_DIST" ]; then
-    echo "✅ CodeRecall MCP server exists: $CODERECALL_DIST"
+# Check ACE MCP server
+ACE_DIST="dist/index.js"
+if [ -f "$ACE_DIST" ]; then
+    echo "✅ ACE MCP server exists: $ACE_DIST"
     echo ""
 else
-    echo "❌ CodeRecall NOT built: $CODERECALL_DIST"
+    echo "❌ ACE NOT built: $ACE_DIST"
     echo "   Run: pnpm build"
     echo ""
 fi
@@ -39,22 +39,22 @@ echo "3. In Output panel, select dropdown: 'Augment'"
 echo "4. Look for these logs:"
 echo ""
 echo "   ✅ [INFO] BYOK enabled"
-echo "   ✅ [INFO] CodeRecall: Connecting to MCP server"
-echo "   ✅ [INFO] CodeRecall: Connected successfully"
-echo "   ✅ [INFO] CodeRecall: Searching codebase"
-echo "   ✅ [INFO] CodeRecall: Injecting context { chunks: N }"
+echo "   ✅ [INFO] ACE: Connecting to MCP server"
+echo "   ✅ [INFO] ACE: Connected successfully"
+echo "   ✅ [INFO] ACE: Searching codebase"
+echo "   ✅ [INFO] ACE: Injecting context { chunks: N }"
 echo ""
 echo "5. If you see errors:"
 echo "   ❌ [ERROR] spawn ... ENOENT → Check mcpServerPath in config"
-echo "   ❌ [WARN] CodeRecall search failed → Check workspace path"
+echo "   ❌ [WARN] ACE search failed → Check workspace path"
 echo ""
 
-# Check recent CodeRecall logs (if LOG_LEVEL=debug)
-CODERECALL_LOG_DIR="$HOME/.coderecall/logs"
-if [ -d "$CODERECALL_LOG_DIR" ]; then
-    LATEST_LOG=$(ls -t "$CODERECALL_LOG_DIR"/app.*.log 2>/dev/null | head -1)
+# Check recent ACE logs (if LOG_LEVEL=debug)
+ACE_LOG_DIR="$HOME/.ace/logs"
+if [ -d "$ACE_LOG_DIR" ]; then
+    LATEST_LOG=$(ls -t "$ACE_LOG_DIR"/app.*.log 2>/dev/null | head -1)
     if [ -n "$LATEST_LOG" ]; then
-        echo "📄 Latest CodeRecall log file:"
+        echo "📄 Latest ACE log file:"
         echo "   $LATEST_LOG"
         echo ""
         echo "   Last 10 lines:"
@@ -67,6 +67,6 @@ echo "════════════════════════�
 echo "💡 Tips:"
 echo "   • No logs? Make sure Augment extension is installed"
 echo "   • Wrong channel? Select 'Augment' from dropdown (not 'Extension Host')"
-echo "   • No CodeRecall logs? Check config: enabled: true, injectContext: true"
+echo "   • No ACE logs? Check config: enabled: true, injectContext: true"
 echo "   • Test manually: node dist/index.js mcp"
 echo ""

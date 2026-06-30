@@ -44,7 +44,7 @@ COPY --from=builder /app/dist ./dist
 
 # Create a workspace data directory with 777 permissions for indexing
 RUN mkdir -p /data && chmod 777 /data
-ENV CODERECALL_WORKSPACE=/data
+ENV WORKSPACE_PATH=/data
 
 # Expose port (Fly.io uses 8080, Hugging Face uses 7860)
 EXPOSE 8080

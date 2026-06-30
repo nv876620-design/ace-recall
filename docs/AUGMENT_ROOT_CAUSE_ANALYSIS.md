@@ -86,12 +86,12 @@ Total: **281MB** checkpoint của file đã bị xóa.
 
 **Windows**:
 ```cmd
-D:\MCP\CodeRecall\scripts\revoke-augment-sync-orchids.bat
+D:\MCP\ACE\scripts\revoke-augment-sync-orchids.bat
 ```
 
 **Linux/Mac**:
 ```bash
-bash D:/MCP/CodeRecall/scripts/revoke-augment-sync-orchids.sh
+bash D:/MCP/ACE/scripts/revoke-augment-sync-orchids.sh
 ```
 
 Script sẽ:

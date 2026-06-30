@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import pLimit from 'p-limit';
 import { getParser, type ProcessedChunk, SemanticSplitter } from '../chunking/index.js';
-import { getChunkingConfig, getCodeRecallProfile } from '../config.js';
+import { getAceProfile, getChunkingConfig } from '../config.js';
 import { readFileWithEncoding } from '../utils/encoding.js';
 import { sha256 } from './hash.js';
 import { getAllowedLanguages, getLanguage, isAllowedExtension } from './language.js';
@@ -71,7 +71,7 @@ let splitter: SemanticSplitter | null = null;
 let splitterProfile: string | null = null;
 
 function getSplitter(): SemanticSplitter {
-  const profile = getCodeRecallProfile();
+  const profile = getAceProfile();
   if (!splitter || splitterProfile !== profile) {
     splitter = new SemanticSplitter(getChunkingConfig());
     splitterProfile = profile;

@@ -21,7 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgPath = path.resolve(__dirname, '../package.json');
 const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'));
 
-const cli = cac('coderecall');
+const cli = cac('ace');
 
 // 自定义版本输出，只显示版本号
 if (process.argv.includes('-v') || process.argv.includes('--version')) {
@@ -29,11 +29,11 @@ if (process.argv.includes('-v') || process.argv.includes('--version')) {
   process.exit(0);
 }
 
-cli.command('init', '初始化 CodeRecall 配置').action(async () => {
+cli.command('init', '初始化 ACE 配置').action(async () => {
   const configDir = getConfigBaseDir();
   const envFile = path.join(configDir, '.env');
 
-  logger.info('开始初始化 CodeRecall...');
+  logger.info('开始初始化 ACE...');
 
   // 创建配置目录
   try {
@@ -368,7 +368,7 @@ cli
 
       if (report.missingInFts.length > 0) {
         logger.warn(
-          `检测到 ${report.missingInFts.length} 条向量记录未进入 chunks_fts（建议执行 coderecall index --force 或增量索引）`,
+          `检测到 ${report.missingInFts.length} 条向量记录未进入 chunks_fts（建议执行 ace index --force 或增量索引）`,
         );
       }
 
@@ -389,30 +389,32 @@ cli
 
 cli
   .command('git-msg [path]', '生成 AI 驱动的 Git 提交消息')
-  .option('--style <style>', '消息风格: conventional, simple, detailed', { default: 'conventional' })
+  .option('--style <style>', '消息风格: conventional, simple, detailed', {
+    default: 'conventional',
+  })
   .option('--no-body', '不包含详细消息体')
   .action(async (targetPath: string | undefined, options: { style?: string; body?: boolean }) => {
     const rootPath = targetPath ? path.resolve(targetPath) : process.cwd();
-    
+
     logger.info(`生成提交消息: ${rootPath}`);
-    
+
     try {
       const { generateCommitMessage } = await import('./git/commitMessage.js');
       const { isGitRepository } = await import('./git/diff.js');
-      
+
       if (!isGitRepository(rootPath)) {
         logger.error(`${rootPath} 不是 Git 仓库`);
         process.exit(1);
       }
-      
-      const style = options.style as 'conventional' | 'simple' | 'detailed' || 'conventional';
+
+      const style = (options.style as 'conventional' | 'simple' | 'detailed') || 'conventional';
       const includeBody = options.body !== false;
-      
+
       const message = await generateCommitMessage(rootPath, {
         style,
         includeBody,
       });
-      
+
       logger.info('生成的提交消息:');
       console.log('');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -422,7 +424,6 @@ cli
       console.log('使用此消息:');
       console.log(`  git commit -m "${message.split('\n')[0]}"`);
       console.log('');
-      
     } catch (err) {
       const error = err as { message?: string; stack?: string };
       logger.error({ err, stack: error.stack }, `生成提交消息失败: ${error.message}`);
@@ -434,32 +435,35 @@ cli
   .command('tasks [path]', '检测项目中的可运行任务')
   .action(async (targetPath: string | undefined) => {
     const rootPath = targetPath ? path.resolve(targetPath) : process.cwd();
-    
+
     logger.info(`检测任务: ${rootPath}`);
-    
+
     try {
       const { detectProjectTasks } = await import('./mcp/tools/detectTasks.js');
-      
+
       const tasks = detectProjectTasks(rootPath);
-      
+
       if (tasks.length === 0) {
         logger.warn('未找到任何任务');
         console.log('');
         console.log('支持的文件: package.json, Makefile, justfile, deno.json, Cargo.toml');
         process.exit(0);
       }
-      
+
       console.log('');
       console.log(`━━━━ 检测到 ${tasks.length} 个任务 ━━━━`);
       console.log('');
-      
+
       // Group by type
-      const grouped = tasks.reduce((acc, task) => {
-        if (!acc[task.type]) acc[task.type] = [];
-        acc[task.type].push(task);
-        return acc;
-      }, {} as Record<string, typeof tasks>);
-      
+      const grouped = tasks.reduce(
+        (acc, task) => {
+          if (!acc[task.type]) acc[task.type] = [];
+          acc[task.type].push(task);
+          return acc;
+        },
+        {} as Record<string, typeof tasks>,
+      );
+
       for (const [type, typeTasks] of Object.entries(grouped)) {
         console.log(`【${type.toUpperCase()}】 (${typeTasks[0].file})`);
         for (const task of typeTasks) {
@@ -469,17 +473,126 @@ cli
         }
         console.log('');
       }
-      
+
       console.log('运行任务:');
       console.log(`  ${tasks[0].command}`);
       console.log('');
-      
     } catch (err) {
       const error = err as { message?: string; stack?: string };
       logger.error({ err, stack: error.stack }, `检测任务失败: ${error.message}`);
       process.exit(1);
     }
   });
+
+cli
+  .command('token create <userId>', '创建新的 API 访问 token')
+  .option('--description <desc>', 'Token 描述')
+  .option('--expires-in <days>', 'Token 有效期（天）')
+  .action(async (userId: string, options: { description?: string; expiresIn?: string }) => {
+    try {
+      const { createToken } = await import('./auth/tokenManager.js');
+
+      const expiresInDays = options.expiresIn ? parseInt(options.expiresIn, 10) : undefined;
+
+      const { token, id } = createToken({
+        userId,
+        description: options.description,
+        expiresInDays,
+      });
+
+      console.log('');
+      console.log('━━━━ Token Created ━━━━');
+      console.log('');
+      console.log(`Token ID: ${id}`);
+      console.log(`User ID:  ${userId}`);
+      console.log(`Token:    ${token}`);
+      console.log('');
+      console.log('⚠️  Save this token securely - it will not be shown again!');
+      console.log('');
+      console.log('使用示例:');
+      console.log(`  curl -H "Authorization: Bearer ${token}" http://localhost:3000/mcp/session`);
+      console.log('');
+    } catch (err) {
+      const error = err as { message?: string; stack?: string };
+      logger.error({ err, stack: error.stack }, `创建 token 失败: ${error.message}`);
+      process.exit(1);
+    }
+  });
+
+cli.command('token list <userId>', '列出用户的所有 token').action(async (userId: string) => {
+  try {
+    const { listTokens } = await import('./auth/tokenManager.js');
+
+    const tokens = listTokens(userId);
+
+    if (tokens.length === 0) {
+      console.log('');
+      console.log(`用户 ${userId} 没有活跃的 token`);
+      console.log('');
+      process.exit(0);
+    }
+
+    console.log('');
+    console.log(`━━━━ Active Tokens for ${userId} ━━━━`);
+    console.log('');
+
+    for (const token of tokens) {
+      const createdDate = new Date(token.createdAt).toISOString();
+      const expiresDate = token.expiresAt ? new Date(token.expiresAt).toISOString() : 'Never';
+      const lastUsed = token.lastUsedAt ? new Date(token.lastUsedAt).toISOString() : 'Never';
+
+      console.log(`ID:          ${token.id}`);
+      console.log(`Description: ${token.description || 'N/A'}`);
+      console.log(`Created:     ${createdDate}`);
+      console.log(`Expires:     ${expiresDate}`);
+      console.log(`Last used:   ${lastUsed}`);
+      console.log('');
+    }
+  } catch (err) {
+    const error = err as { message?: string; stack?: string };
+    logger.error({ err, stack: error.stack }, `列出 token 失败: ${error.message}`);
+    process.exit(1);
+  }
+});
+
+cli.command('token revoke <tokenId>', '撤销 token').action(async (tokenId: string) => {
+  try {
+    const { revokeToken } = await import('./auth/tokenManager.js');
+
+    const revoked = revokeToken(tokenId);
+
+    if (revoked) {
+      console.log('');
+      console.log(`✓ Token ${tokenId} 已撤销`);
+      console.log('');
+    } else {
+      console.log('');
+      console.log(`✗ Token ${tokenId} 不存在或已被撤销`);
+      console.log('');
+      process.exit(1);
+    }
+  } catch (err) {
+    const error = err as { message?: string; stack?: string };
+    logger.error({ err, stack: error.stack }, `撤销 token 失败: ${error.message}`);
+    process.exit(1);
+  }
+});
+
+cli.command('token cleanup', '清理过期的 token').action(async () => {
+  try {
+    const { cleanupExpiredTokens } = await import('./auth/tokenManager.js');
+
+    const cleaned = cleanupExpiredTokens();
+
+    console.log('');
+    console.log(`✓ 清理了 ${cleaned} 个过期 token`);
+    console.log('');
+  } catch (err) {
+    const error = err as { message?: string; stack?: string };
+    logger.error({ err, stack: error.stack }, `清理 token 失败: ${error.message}`);
+    process.exit(1);
+  }
+});
 
 cli.help();
 cli.parse();

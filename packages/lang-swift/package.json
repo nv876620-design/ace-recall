@@ -1,11 +1,11 @@
 {
-  "name": "@alistar.max/coderecall-lang-swift",
+  "name": "@alistar.max/ace-lang-swift",
   "version": "0.1.6",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodingOX/CodeRecall.git"
+    "url": "git+https://github.com/nv876620-design/ace-recall.git"
   },
-  "homepage": "https://github.com/CodingOX/CodeRecall#readme",
+  "homepage": "https://github.com/nv876620-design/ace-recall#readme",
   "publishConfig": {
     "access": "public"
   },

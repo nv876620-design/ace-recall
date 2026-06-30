@@ -191,10 +191,10 @@ async function main() {
     process.exit(0);
   }
 
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-mcp-e2e-'));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-mcp-e2e-'));
   const fakeHome = path.join(tempRoot, 'home');
   const fakeRepo = path.join(tempRoot, 'repo');
-  const fakeConfigDir = path.join(fakeHome, '.coderecall');
+  const fakeConfigDir = path.join(fakeHome, '.ace');
 
   await fs.mkdir(fakeConfigDir, { recursive: true });
   await fs.mkdir(fakeRepo, { recursive: true });

@@ -5,7 +5,7 @@
  *
  * 加载策略：
  * - 开发环境 (NODE_ENV !== "production"): 加载项目根目录的 .env 文件
- * - 生产环境 (NODE_ENV === "production"): 加载 CodeRecall 默认配置目录下的 .env 文件
+ * - 生产环境 (NODE_ENV === "production"): 加载 ACE 默认配置目录下的 .env 文件
  *
  * 此模块必须在应用启动时最先导入，以确保环境变量在其他模块加载前可用。
  */
@@ -19,10 +19,10 @@ import { getDefaultEnvFilePath, getPreferredHomeEnvFilePath } from './utils/path
 
 const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev';
 
-// MCP 模式检测：通过命令行参数判断（coderecall mcp）
+// MCP 模式检测：通过命令行参数判断（ace mcp）
 export const isMcpMode = process.argv[2] === 'mcp';
 
-export const DEFAULT_ENV_TEMPLATE = `# CodeRecall 示例环境变量配置文件
+export const DEFAULT_ENV_TEMPLATE = `# ACE 示例环境变量配置文件
 
 # Embedding API 配置（必需）
 # 推荐使用 KEYS（逗号分隔多 key），方便后期扩展限速轮转
@@ -34,9 +34,9 @@ EMBEDDINGS_MODEL=BAAI/bge-m3
 EMBEDDINGS_DIMENSIONS=1024
 
 # 默认配置档位
-# CODE_RECALL_PROFILE: quality | balanced | performance
+# ACE_PROFILE: quality | balanced | performance
 # EMBEDDINGS_RATE_PROFILE: safe | balanced | fast
-CODE_RECALL_PROFILE=balanced
+ACE_PROFILE=balanced
 EMBEDDINGS_RATE_PROFILE=balanced
 
 # 高级覆盖项：通常不需要配置
@@ -101,7 +101,7 @@ export interface EmbeddingConfig {
   apiKey: string;
   apiKeys?: string[];
   rateProfile: EmbeddingRateProfile;
-  indexProfile: CodeRecallProfile;
+  indexProfile: AceProfile;
   chunking: ChunkingProfileConfig;
   keyConfigs?: Array<{
     apiKey: string;
@@ -129,7 +129,7 @@ export interface RerankerConfig {
 }
 
 export type EmbeddingRateProfile = 'safe' | 'balanced' | 'fast';
-export type CodeRecallProfile = 'quality' | 'balanced' | 'performance';
+export type AceProfile = 'quality' | 'balanced' | 'performance';
 
 export interface ChunkingProfileConfig {
   maxChunkSize: number;
@@ -146,7 +146,7 @@ const RATE_PROFILE_DEFAULTS: Record<
   fast: { maxConcurrency: 30, maxRpm: 2000, maxTpm: 1000000 },
 };
 
-const CHUNKING_PROFILE_DEFAULTS: Record<CodeRecallProfile, ChunkingProfileConfig> = {
+const CHUNKING_PROFILE_DEFAULTS: Record<AceProfile, ChunkingProfileConfig> = {
   quality: { maxChunkSize: 500, minChunkSize: 50, chunkOverlap: 40 },
   balanced: { maxChunkSize: 700, minChunkSize: 100, chunkOverlap: 32 },
   performance: { maxChunkSize: 900, minChunkSize: 120, chunkOverlap: 24 },
@@ -232,16 +232,16 @@ function parsePerKeyNumberList(value: string | undefined): number[] {
   });
 }
 
-export function getCodeRecallProfile(): CodeRecallProfile {
-  return resolveProfile<CodeRecallProfile>(
-    process.env.CODE_RECALL_PROFILE,
+export function getAceProfile(): AceProfile {
+  return resolveProfile<AceProfile>(
+    process.env.ACE_PROFILE ?? process.env.CODE_RECALL_PROFILE,
     ['quality', 'balanced', 'performance'],
     'balanced',
   );
 }
 
 export function getChunkingConfig(): ChunkingProfileConfig {
-  return CHUNKING_PROFILE_DEFAULTS[getCodeRecallProfile()];
+  return CHUNKING_PROFILE_DEFAULTS[getAceProfile()];
 }
 
 /**
@@ -305,7 +305,7 @@ export function getEmbeddingConfig(): EmbeddingConfig {
     ['safe', 'balanced', 'fast'],
     'balanced',
   );
-  const indexProfile = getCodeRecallProfile();
+  const indexProfile = getAceProfile();
   const rateDefaults = RATE_PROFILE_DEFAULTS[rateProfile];
   const chunking = getChunkingConfig();
   const maxConcurrency = parseInt(

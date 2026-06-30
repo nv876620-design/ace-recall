@@ -31,7 +31,7 @@
 
 **CLI Command:**
 ```bash
-coderecall git-msg [path] [--style <style>] [--no-body]
+ace git-msg [path] [--style <style>] [--no-body]
 ```
 
 **MCP Tool:**
@@ -51,7 +51,7 @@ generate-commit-message
 
 **Example Output:**
 ```bash
-$ coderecall git-msg
+$ ace git-msg
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 feat(mcp): add AI commit message and task detection
@@ -71,7 +71,7 @@ feat(mcp): add AI commit message and task detection
 
 **CLI Command:**
 ```bash
-coderecall tasks [path]
+ace tasks [path]
 ```
 
 **MCP Tool:**
@@ -89,7 +89,7 @@ detect-tasks
 
 **Example Output:**
 ```bash
-$ coderecall tasks
+$ ace tasks
 
 ━━━━ 检测到 15 个任务 ━━━━
 
@@ -277,7 +277,7 @@ cli.command('tasks')    // ✨ NEW
 
 ```bash
 # 1. Detect available tasks
-$ coderecall tasks
+$ ace tasks
 Found 15 tasks...
 
 # 2. Run tests
@@ -290,7 +290,7 @@ $ vim src/api/auth.ts
 $ git add src/api/auth.ts
 
 # 5. Generate commit message
-$ coderecall git-msg
+$ ace git-msg
 Generated: "feat(api): add JWT authentication"
 
 # 6. Commit
@@ -332,7 +332,7 @@ AI: [executes pnpm test]
 - Task detection from project files
 - Multi-workspace concept (planned)
 
-**CodeRecall's unique approach:**
+**ACE's unique approach:**
 - API-based AI (no local models)
 - MCP integration (works with any editor)
 - Focus on context retrieval, not editing
@@ -350,14 +350,14 @@ Inspired by NotepadAI, add two new developer productivity features:
    - Generate commit messages from staged diff
    - Support 3 styles: conventional, simple, detailed
    - Fallback to rule-based generation if API fails
-   - CLI: coderecall git-msg
+   - CLI: ace git-msg
    - MCP: generate-commit-message tool
 
 2. Automatic Task Detection
    - Detect tasks from package.json, Makefile, justfile, etc.
    - Parse descriptions from comments
    - Auto-detect package manager (npm/pnpm/yarn)
-   - CLI: coderecall tasks
+   - CLI: ace tasks
    - MCP: detect-tasks tool
 
 New files:
@@ -386,4 +386,4 @@ Pending: Manual testing of git-msg, MCP integration
 **Features Working:** 2/2 (task detection ✓, commit message build ✓)
 **Ready for:** Manual testing and PR
 
-🎉 **Major milestone achieved!** CodeRecall now has developer productivity features inspired by NotepadAI while maintaining its core identity as a context provider for AI agents.
+🎉 **Major milestone achieved!** ACE now has developer productivity features inspired by NotepadAI while maintaining its core identity as a context provider for AI agents.

@@ -1,10 +1,10 @@
 import type { LanguageRuntime } from './LanguageRuntime.js';
 
 export const DEFAULT_PLUGIN_CANDIDATES = [
-  '@alistar.max/coderecall-lang-typescript',
-  '@alistar.max/coderecall-lang-kotlin',
-  '@alistar.max/coderecall-lang-java',
-  '@alistar.max/coderecall-lang-rust',
+  '@alistar.max/ace-lang-typescript',
+  '@alistar.max/ace-lang-kotlin',
+  '@alistar.max/ace-lang-java',
+  '@alistar.max/ace-lang-rust',
 ] as const;
 
 type RuntimeFactory = () => unknown;

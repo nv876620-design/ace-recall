@@ -23,7 +23,7 @@ function buildLargeTypeScriptContent(targetBytes: number): string {
 }
 
 test('大于 100KB 且小于 500KB 的 TS 文件不应被跳过，并应产出 chunks', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-large-ts-'));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-large-ts-'));
 
   try {
     const filePath = path.join(tempRoot, 'large.ts');
@@ -46,7 +46,7 @@ test('大于 100KB 且小于 500KB 的 TS 文件不应被跳过，并应产出 c
 });
 
 test('未知扩展名默认不允许，配置 include 后允许', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-include-'));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-include-'));
 
   try {
     const unknownFilePath = path.join(tempRoot, 'notes.prompt');
@@ -56,7 +56,7 @@ test('未知扩展名默认不允许，配置 include 后允许', async () => {
     const defaultPaths = await crawl(tempRoot);
     assert.equal(defaultPaths.includes(unknownFilePath), false);
 
-    const includeConfigPath = path.join(tempRoot, '.coderecallinclude');
+    const includeConfigPath = path.join(tempRoot, '.aceinclude');
     await fs.writeFile(includeConfigPath, '**/*.prompt\n', 'utf8');
 
     await initFilter(tempRoot);

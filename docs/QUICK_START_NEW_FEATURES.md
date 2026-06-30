@@ -2,7 +2,7 @@
 
 ## Overview
 
-CodeRecall v0.1.7+ includes powerful new features inspired by nullmastermind's repositories:
+ACE v0.1.7+ includes powerful new features inspired by nullmastermind's repositories:
 - **AI-Powered Commit Messages** - Generate meaningful commit messages automatically
 - **Task Detection** - Discover all runnable tasks in your project
 - **Field-Qualified Search** - Filter search results with precision
@@ -18,7 +18,7 @@ CodeRecall v0.1.7+ includes powerful new features inspired by nullmastermind's r
 git add src/api/auth.ts src/utils/validation.ts
 
 # 2. Generate commit message
-coderecall git-msg
+ace git-msg
 
 # Output:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -36,16 +36,16 @@ git commit -m "feat(api): add JWT token validation"
 
 ```bash
 # Conventional Commits (default)
-coderecall git-msg --style conventional
+ace git-msg --style conventional
 
 # Simple style
-coderecall git-msg --style simple
+ace git-msg --style simple
 
 # Detailed with explanation
-coderecall git-msg --style detailed
+ace git-msg --style detailed
 
 # Without body
-coderecall git-msg --no-body
+ace git-msg --no-body
 ```
 
 ### From MCP Clients
@@ -66,7 +66,7 @@ use generate-commit-message with:
 
 ```bash
 # Detect all tasks in current directory
-coderecall tasks
+ace tasks
 
 # Output:
 # ━━━━ 检测到 15 个任务 ━━━━
@@ -101,23 +101,23 @@ use detect-tasks with:
 
 ```bash
 # Filter by symbol kind
-coderecall search-context \
+ace search-context \
   --information-request "authentication logic kind:function"
 
 # Multiple filters
-coderecall search-context \
+ace search-context \
   --information-request "database models kind:class lang:typescript path:src/db"
 
 # Language filter
-coderecall search-context \
+ace search-context \
   --information-request "error handling lang:python lang:rust"
 
 # Path filter
-coderecall search-context \
+ace search-context \
   --information-request "API endpoints path:src/api path:routes"
 
 # Name filter
-coderecall search-context \
+ace search-context \
   --information-request "validation logic name:Validator name:validate"
 ```
 
@@ -155,7 +155,7 @@ use codebase-retrieval with:
 ## 🎯 Tips
 
 1. **Commit Messages**: Always stage changes with `git add` before generating messages
-2. **Tasks**: Run `coderecall tasks` in any project to discover available commands
+2. **Tasks**: Run `ace tasks` in any project to discover available commands
 3. **Search Filters**: Combine multiple filters for precise results
 4. **MCP Integration**: All features are available through MCP tools for AI agents
 
@@ -173,7 +173,7 @@ use codebase-retrieval with:
 - Verify file permissions
 
 ### Field-qualified search returns no results
-- Ensure the repository is indexed: `coderecall index .`
+- Ensure the repository is indexed: `ace index .`
 - Check filter syntax (use `:` separator, not `=`)
 - Try without filters first to verify basic search works
 
@@ -182,7 +182,7 @@ use codebase-retrieval with:
 ## 🚀 Next Steps
 
 1. Try generating a commit message for your current work
-2. Discover tasks in your projects with `coderecall tasks`
+2. Discover tasks in your projects with `ace tasks`
 3. Explore field-qualified search to find specific code patterns
 4. Integrate with Claude Desktop or other MCP clients
 

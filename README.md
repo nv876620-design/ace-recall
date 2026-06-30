@@ -32,10 +32,10 @@ Setup the environment configuration file:
 ```bash
 ace-recall init
 ```
-This initializes a configuration template under `~/.coderecall/.env`.
+This initializes a configuration template under `~/.ace/.env`.
 
 ### 3. Add API Keys
-Open `~/.coderecall/.env` and configure your API keys (SiliconFlow, Jina, OpenAI, etc.):
+Open `~/.ace/.env` and configure your API keys (SiliconFlow, Jina, OpenAI, etc.):
 ```env
 EMBEDDINGS_API_KEYS=your-embedding-key-1,your-embedding-key-2
 RERANK_API_KEYS=your-reranker-key-here
@@ -97,7 +97,7 @@ ACE features a premium dark-themed admin dashboard (Glassmorphism layout with sm
 
 | Command | Description |
 |---------|-------------|
-| `ace-recall init` | Creates the global `.env` file template under `~/.coderecall/.env` |
+| `ace-recall init` | Creates the global `.env` file template under `~/.ace/.env` |
 | `ace-recall index [path]` | Scans and indexes the target codebase directory (use `-f` to force rebuild) |
 | `ace-recall search` | Performs interactive command-line searches on your indexed codebases |
 | `ace-recall tasks [path]` | Automatically discovers runnable tasks and commands in the workspace |
@@ -150,7 +150,7 @@ User Query ➔ Hybrid Recall (Vector + BM25) ➔ RRF Fusion ➔ Rerank ➔ Graph
 
 ## 🔧 Configuration & Environment Variables
 
-Configure these settings inside `~/.coderecall/.env`:
+Configure these settings inside `~/.ace/.env`:
 
 ```env
 # Embedding Models Config

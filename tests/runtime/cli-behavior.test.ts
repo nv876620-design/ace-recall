@@ -6,7 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 
 test('search source_code_only + include_languages 组合不再互斥，取交集后正常进入搜索', { concurrency: false }, () => {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-language-flags-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'ace-cli-language-flags-'));
 
   try {
     const result = spawnSync(
@@ -49,7 +49,7 @@ test('search source_code_only + include_languages 组合不再互斥，取交集
 });
 
 test('search 配置缺失时返回非零退出码', { concurrency: false }, () => {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-missing-env-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'ace-cli-missing-env-'));
 
   try {
     const result = spawnSync(
@@ -85,8 +85,8 @@ test('search 配置缺失时返回非零退出码', { concurrency: false }, () =
 });
 
 test('search 在日志目录不可写时不应因 logger 崩溃', { concurrency: false }, () => {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-cli-readonly-logs-'));
-  const logDir = path.join(fakeHome, '.coderecall', 'logs');
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'ace-cli-readonly-logs-'));
+  const logDir = path.join(fakeHome, '.ace', 'logs');
 
   try {
     fs.mkdirSync(logDir, { recursive: true });

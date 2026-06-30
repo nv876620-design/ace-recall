@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Successfully analyzed and implemented features from two nullmastermind repositories into CodeRecall:
+Successfully analyzed and implemented features from two nullmastermind repositories into ACE:
 - **[NotepadAI](https://github.com/nullmastermind/NotepadAI)** - Qt/C++ Code Editor
 - **[vibervn-context-engine](https://github.com/nullmastermind/vibervn-context-engine)** - Rust-based Context Engine
 
@@ -30,7 +30,7 @@ Successfully analyzed and implemented features from two nullmastermind repositor
 - ✅ 3 styles: conventional, simple, detailed
 - ✅ Rule-based fallback when API unavailable
 - ✅ Smart scope inference from file paths
-- ✅ CLI command: `coderecall git-msg`
+- ✅ CLI command: `ace git-msg`
 - ✅ MCP tool: `generate-commit-message`
 
 **Test Results**: ✅ Build successful, ready for production
@@ -52,7 +52,7 @@ Successfully analyzed and implemented features from two nullmastermind repositor
 - ✅ `Cargo.toml`
 
 **Test Results**: 
-✅ **15 tasks detected successfully** in CodeRecall repository itself
+✅ **15 tasks detected successfully** in ACE repository itself
 ```
 【PNPM】 (package.json)
   pnpm:build, pnpm:dev, pnpm:test, etc. (15 total)
@@ -184,7 +184,7 @@ $ pnpm build
 git add src/api/auth.ts src/utils/validation.ts
 
 # Generate message
-coderecall git-msg
+ace git-msg
 
 # Output:
 # feat(api): add JWT token validation
@@ -195,7 +195,7 @@ coderecall git-msg
 
 ### 2. Detect Project Tasks
 ```bash
-coderecall tasks
+ace tasks
 
 # Output:
 # ━━━━ 检测到 15 个任务 ━━━━
@@ -322,7 +322,7 @@ Closes #XX"
 - ✅ **Build**: Successful compilation
 - ✅ **Quality**: Production-ready code
 
-CodeRecall now has powerful developer productivity features inspired by the best ideas from nullmastermind's repositories, while maintaining its core identity as a semantic code context engine for AI agents.
+ACE now has powerful developer productivity features inspired by the best ideas from nullmastermind's repositories, while maintaining its core identity as a semantic code context engine for AI agents.
 
 **Total New Capabilities**: 3 MCP tools, 2 CLI commands, field-qualified search  
 **Ready for**: Production deployment  
@@ -332,5 +332,5 @@ CodeRecall now has powerful developer productivity features inspired by the best
 
 **Implemented by**: Kiro AI Assistant  
 **Date**: 2026-06-17  
-**Version**: CodeRecall v0.1.7+  
+**Version**: ACE v0.1.7+  
 **Status**: ✅ COMPLETE

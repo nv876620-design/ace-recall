@@ -17,7 +17,7 @@
 ### Step 1: Fix config (tự động)
 
 ```bash
-node D:\MCP\CodeRecall\scripts\fix-augment-config.cjs
+node D:\MCP\ACE\scripts\fix-augment-config.cjs
 ```
 
 Restart VSCode sau khi chạy.
@@ -27,7 +27,7 @@ Restart VSCode sau khi chạy.
 **Đóng TẤT CẢ VSCode trước!** Sau đó:
 
 ```cmd
-D:\MCP\CodeRecall\scripts\fix-augment-indexing-loop.bat
+D:\MCP\ACE\scripts\fix-augment-indexing-loop.bat
 ```
 
 ### Step 3: Xác minh

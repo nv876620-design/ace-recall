@@ -7,7 +7,7 @@ import { processFiles } from '../../src/scanner/processor.js';
 
 assert.equal(isLanguageSupported('kotlin'), false);
 
-const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-fallback-kotlin-'));
+const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-fallback-kotlin-'));
 const filePath = path.join(tempRoot, 'Sample.kt');
 
 try {

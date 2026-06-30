@@ -6,7 +6,7 @@ import test from 'node:test';
 import { readFileWithEncoding } from '../../src/utils/encoding.js';
 
 test('readFileWithEncoding 应快速读取 UTF-8 文件', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-encoding-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-encoding-'));
   const file = path.join(dir, 'utf8.ts');
 
   try {
@@ -22,7 +22,7 @@ test('readFileWithEncoding 应快速读取 UTF-8 文件', async () => {
 });
 
 test('readFileWithEncoding 对带 BOM 的非 UTF-8 文件仍应回退到 iconv 解码', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-encoding-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-encoding-'));
   const file = path.join(dir, 'utf16le.txt');
 
   try {

@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 test('性能档分片应优先减少 chunk 数而不丢失内容', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-chunk-profile-'));
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-chunk-profile-'));
   const filePath = path.join(tempRoot, 'Large.ts');
 
   try {

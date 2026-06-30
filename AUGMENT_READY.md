@@ -1,4 +1,4 @@
-# ✅ Augment + CodeRecall Integration - COMPLETE
+# ✅ Augment + ACE Integration - COMPLETE
 
 ## 📦 Deliverables
 
@@ -12,14 +12,14 @@ Status: Ready to install
 
 **Features**:
 - ✅ Disable Augment native indexing (patch applied)
-- ✅ CodeRecall MCP client integration
+- ✅ ACE MCP client integration
 - ✅ Context injection on chat
 - ✅ Workspace path auto-detection
 
 ### 2. Integration Code ✅
 
 ```
-Augment_BYOK_gagmeng/payload/extension/out/byok/integrations/coderecall/
+Augment_BYOK_gagmeng/payload/extension/out/byok/integrations/ace/
 ├── mcp-client.js (233 lines)       # MCP stdio client
 ├── context-injector.js (176 lines) # Search + inject logic
 ├── workspace-watcher.js (77 lines) # Workspace tracking
@@ -70,7 +70,7 @@ VS Code → Extensions → Install from VSIX
 
 ### Step 2: Generate Config
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 node scripts/generate-augment-config.cjs --anthropic-key sk-ant-YOUR_KEY
 ```
 
@@ -82,7 +82,7 @@ Ctrl+Shift+P → BYOK: Enable
 ### Step 4: Test
 ```
 Open folder → Chat: "How does authentication work?"
-→ Check Output → Augment for CodeRecall logs
+→ Check Output → Augment for ACE logs
 ```
 
 ---
@@ -99,10 +99,10 @@ Linux/Mac: ~/.augment/byok-config.json
 ```json
 {
   "version": 1,
-  "coderecall": {
+  "ace": {
     "enabled": true,
     "mcpServerPath": "node",
-    "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"],
+    "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"],
     "autoIndex": false,
     "injectContext": true
   },
@@ -142,13 +142,13 @@ Linux/Mac: ~/.augment/byok-config.json
 └────────────────────┬────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────┐
-│ mcp-client.js spawns CodeRecall MCP                 │
+│ mcp-client.js spawns ACE MCP                 │
 │ → Spawn: node dist/index.js mcp                     │
 │ → Send JSON-RPC: tools/call codebase-retrieval      │
 └────────────────────┬────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────┐
-│ CodeRecall MCP searches codebase                    │
+│ ACE MCP searches codebase                    │
 │ → Vector search + FTS fusion                        │
 │ → Rerank results                                    │
 │ → Return relevant code chunks                       │
@@ -164,14 +164,14 @@ Linux/Mac: ~/.augment/byok-config.json
 └────────────────────┬────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────────────┐
-│ LLM response with code insights from CodeRecall     │
+│ LLM response with code insights from ACE     │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### Key Points
 
 1. **No Augment Indexing**: Patched out, won't run
-2. **On-demand Search**: CodeRecall searches only when user chats
+2. **On-demand Search**: ACE searches only when user chats
 3. **Context Injection**: Results added to `selected_code` field
 4. **Local Processing**: All search happens locally, privacy preserved
 
@@ -179,10 +179,10 @@ Linux/Mac: ~/.augment/byok-config.json
 
 ## 📊 Comparison
 
-| Aspect | Before (Augment) | After (CodeRecall) |
+| Aspect | Before (Augment) | After (ACE) |
 |--------|------------------|-------------------|
 | **Indexing** | Augment native (slow, stuck) | Disabled ✅ |
-| **Search** | Augment cloud context | CodeRecall local semantic search ✅ |
+| **Search** | Augment cloud context | ACE local semantic search ✅ |
 | **Privacy** | Code → Augment cloud | 100% local ✅ |
 | **Speed** | Network latency | Instant local search ✅ |
 | **Accuracy** | Generic context | Semantic embeddings ✅ |
@@ -203,13 +203,13 @@ Linux/Mac: ~/.augment/byok-config.json
 3. Reload VS Code
 4. Check logs for: `[BYOK] Augment indexing disabled`
 
-### Issue: No CodeRecall context in chat
+### Issue: No ACE context in chat
 
 **Check logs** (Output → Augment):
 ```
-[INFO] CodeRecall: Connecting...
-[INFO] CodeRecall: Searching...
-[INFO] CodeRecall: Injecting context { chunks: N }
+[INFO] ACE: Connecting...
+[INFO] ACE: Searching...
+[INFO] ACE: Injecting context { chunks: N }
 ```
 
 **If missing**:
@@ -224,12 +224,12 @@ Linux/Mac: ~/.augment/byok-config.json
 **Fix**:
 ```bash
 # Get correct path
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 pwd  # Copy this path
 
 # Update config mcpServerArgs[0]
-"D:\\MCP\\CodeRecall\\dist\\index.js"  # Windows
-"/path/to/CodeRecall/dist/index.js"    # Linux/Mac
+"D:\\MCP\\ACE\\dist\\index.js"  # Windows
+"/path/to/ACE/dist/index.js"    # Linux/Mac
 ```
 
 ### Full Troubleshooting Guide
@@ -240,7 +240,7 @@ See: `docs/AUGMENT_BYOK_CONFIG_GUIDE.md`
 ## 📁 File Structure
 
 ```
-CodeRecall/
+ACE/
 ├── AUGMENT_CONFIG_QUICK.md          # Quick ref
 ├── AUGMENT_MANUAL_CONFIG.md         # Manual config
 ├── AUGMENT_READY.md                 # This file
@@ -248,7 +248,7 @@ CodeRecall/
 │   ├── AUGMENT_BYOK_CONFIG_GUIDE.md       # Full guide
 │   ├── AUGMENT_QUICKSTART.md              # Quickstart
 │   ├── AUGMENT_INTEGRATION_SUMMARY.md     # Tech summary
-│   └── AUGMENT_BYOK_CODERECALL_INTEGRATION.md  # Architecture
+│   └── AUGMENT_BYOK_ACE_INTEGRATION.md  # Architecture
 └── scripts/
     ├── generate-augment-config.cjs        # Auto-gen config
     ├── test-augment-mcp-client.cjs        # Test MCP
@@ -261,7 +261,7 @@ Augment_BYOK_gagmeng/
 │   ├── lib/byok-workflow.js (modified)
 │   └── patch/patch-disable-augment-indexing.js (new)
 └── payload/extension/out/byok/
-    ├── integrations/coderecall/       # Integration code
+    ├── integrations/ace/       # Integration code
     ├── runtime/shim/byok-chat/        # Hook point (modified)
     └── config/default-config.js       # Config schema (modified)
 ```
@@ -290,7 +290,7 @@ Augment_BYOK_gagmeng/
 
 ### Ready for Production ✅
 - [x] No Augment indexing (patched)
-- [x] CodeRecall MCP integration working
+- [x] ACE MCP integration working
 - [x] Config system complete
 - [x] Documentation comprehensive
 - [x] Error handling robust
@@ -314,8 +314,8 @@ Augment_BYOK_gagmeng/
 ## 🚀 Get Started Now
 
 ```bash
-# 1. Build CodeRecall (if not done)
-cd D:\MCP\CodeRecall
+# 1. Build ACE (if not done)
+cd D:\MCP\ACE
 pnpm build
 
 # 2. Generate config

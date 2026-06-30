@@ -1,4 +1,4 @@
-# fly.toml app configuration file for CodeRecall (ace-recall)
+# fly.toml app configuration file for ACE (ace-recall)
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -10,7 +10,7 @@ primary_region = 'sin'
 
 [env]
   PORT = '8080'
-  CODERECALL_WORKSPACE = '/data'
+  WORKSPACE_PATH = '/data'
 
 [[mounts]]
   source = 'data'

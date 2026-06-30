@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Auto-generate Augment BYOK config với CodeRecall integration
+ * Auto-generate Augment BYOK config với ACE integration
  *
  * Usage:
  *   node scripts/generate-augment-config.cjs
@@ -49,7 +49,7 @@ function parseArgs() {
 
 function printHelp() {
   console.log(`
-Auto-generate Augment BYOK config with CodeRecall integration
+Auto-generate Augment BYOK config with ACE integration
 
 Usage:
   node scripts/generate-augment-config.cjs [options]
@@ -90,13 +90,13 @@ function prompt(question) {
   });
 }
 
-// Get CodeRecall dist path
-function getCodeRecallDistPath() {
+// Get ACE dist path
+function getAceDistPath() {
   const distPath = path.join(__dirname, '..', 'dist', 'index.js');
   const absolutePath = path.resolve(distPath);
 
   if (!fs.existsSync(absolutePath)) {
-    console.warn('⚠️  Warning: CodeRecall dist/index.js not found at:', absolutePath);
+    console.warn('⚠️  Warning: ACE dist/index.js not found at:', absolutePath);
     console.warn('   Run `pnpm build` first!');
   }
 
@@ -106,14 +106,14 @@ function getCodeRecallDistPath() {
 
 // Generate config object
 function generateConfig(options) {
-  const coderecallDistPath = getCodeRecallDistPath();
+  const aceDistPath = getAceDistPath();
 
   const config = {
     version: 1,
-    coderecall: {
+    ace: {
       enabled: true,
       mcpServerPath: 'node',
-      mcpServerArgs: [coderecallDistPath, 'mcp'],
+      mcpServerArgs: [aceDistPath, 'mcp'],
       autoIndex: false,
       injectContext: true,
     },
@@ -191,7 +191,7 @@ function writeConfig(config, outputPath) {
 
 // Main
 async function main() {
-  console.log('🔧 Augment BYOK + CodeRecall Config Generator\n');
+  console.log('🔧 Augment BYOK + ACE Config Generator\n');
 
   const args = parseArgs();
 

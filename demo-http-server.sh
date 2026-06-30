@@ -7,7 +7,7 @@ set -e
 PORT=3002
 HOST="127.0.0.1"
 
-echo "=== CodeRecall HTTP Server Demo ==="
+echo "=== ACE HTTP Server Demo ==="
 echo ""
 echo "Đang khởi động HTTP server tại http://${HOST}:${PORT}"
 echo ""
@@ -56,7 +56,7 @@ curl -s -X POST "http://${HOST}:${PORT}/mcp" \
 echo ""
 
 echo "5. Server logs:"
-echo "   Xem logs tại ~/.coderecall/logs/app.*.log"
+echo "   Xem logs tại ~/.ace/logs/app.*.log"
 echo ""
 
 echo "Nhấn Ctrl+C để dừng server..."

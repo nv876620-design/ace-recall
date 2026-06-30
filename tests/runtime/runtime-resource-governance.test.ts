@@ -39,7 +39,7 @@ async function withEmbeddingEnv<T>(fn: () => T | Promise<T>): Promise<T> {
   const prevKeyMaxRpms = process.env.EMBEDDINGS_KEY_MAX_RPMS;
   const prevKeyMaxTpms = process.env.EMBEDDINGS_KEY_MAX_TPMS;
   const prevRateProfile = process.env.EMBEDDINGS_RATE_PROFILE;
-  const prevCodeRecallProfile = process.env.CODE_RECALL_PROFILE;
+  const prevAceProfile = process.env.ACE_PROFILE;
 
   process.env.EMBEDDINGS_API_KEY = TEST_CONFIG.apiKey;
   process.env.EMBEDDINGS_API_KEYS = TEST_CONFIG.apiKey;
@@ -53,7 +53,7 @@ async function withEmbeddingEnv<T>(fn: () => T | Promise<T>): Promise<T> {
   delete process.env.EMBEDDINGS_KEY_MAX_RPMS;
   delete process.env.EMBEDDINGS_KEY_MAX_TPMS;
   process.env.EMBEDDINGS_RATE_PROFILE = 'balanced';
-  process.env.CODE_RECALL_PROFILE = 'balanced';
+  process.env.ACE_PROFILE = 'balanced';
 
   try {
     return await fn();
@@ -82,8 +82,8 @@ async function withEmbeddingEnv<T>(fn: () => T | Promise<T>): Promise<T> {
     else process.env.EMBEDDINGS_KEY_MAX_TPMS = prevKeyMaxTpms;
     if (prevRateProfile === undefined) delete process.env.EMBEDDINGS_RATE_PROFILE;
     else process.env.EMBEDDINGS_RATE_PROFILE = prevRateProfile;
-    if (prevCodeRecallProfile === undefined) delete process.env.CODE_RECALL_PROFILE;
-    else process.env.CODE_RECALL_PROFILE = prevCodeRecallProfile;
+    if (prevAceProfile === undefined) delete process.env.ACE_PROFILE;
+    else process.env.ACE_PROFILE = prevAceProfile;
   }
 }
 
@@ -171,7 +171,7 @@ test('VectorStore.close 应探测并调用底层 close/dispose 能力', async ()
 
 test('scan 新轮次应刷新 EmbeddingClient 与 RateLimitController 状态', async () => {
   const { scan } = await import('../../src/scanner/index.js');
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'coderecall-scan-reset-'));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ace-scan-reset-'));
 
   await withEmbeddingEnv(async () => {
     resetEmbeddingClient();

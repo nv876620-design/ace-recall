@@ -1,15 +1,15 @@
 # HTTP Server Mode
 
-CodeRecall giờ đây hỗ trợ chạy MCP server qua HTTP thay vì stdio, cho phép tích hợp dễ dàng hơn với các service khác.
+ACE giờ đây hỗ trợ chạy MCP server qua HTTP thay vì stdio, cho phép tích hợp dễ dàng hơn với các service khác.
 
 ## Khởi động HTTP Server
 
 ```bash
 # Chạy với port và host mặc định (3000, 127.0.0.1)
-coderecall mcp-http
+ace mcp-http
 
 # Chỉ định port và host tùy chỉnh
-coderecall mcp-http --port 8080 --host 0.0.0.0
+ace mcp-http --port 8080 --host 0.0.0.0
 ```
 
 ## Endpoints
@@ -21,7 +21,7 @@ GET http://localhost:3000/health
 Response:
 {
   "status": "ok",
-  "service": "coderecall-mcp-http",
+  "service": "ace-mcp-http",
   "version": "1.0.0"
 }
 ```
@@ -33,7 +33,7 @@ GET/POST http://localhost:3000/get-models
 Response: (giống /health)
 {
   "status": "ok",
-  "service": "coderecall-mcp-http",
+  "service": "ace-mcp-http",
   "version": "1.0.0"
 }
 
@@ -53,7 +53,7 @@ GET/POST http://localhost:3000/augment/get-models
 Response: (giống /health)
 {
   "status": "ok",
-  "service": "coderecall-mcp-http",
+  "service": "ace-mcp-http",
   "version": "1.0.0"
 }
 ```
@@ -82,7 +82,7 @@ Cấu hình trong `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "coderecall-http": {
+    "ace-http": {
       "url": "http://localhost:3000/mcp",
       "transport": "http"
     }
@@ -133,7 +133,7 @@ HTTP server sử dụng:
 |---------|-----------|-----------|
 | **Transport** | stdin/stdout | HTTP POST + SSE |
 | **Use case** | Claude Desktop local | Web services, remote clients |
-| **Command** | `coderecall mcp` | `coderecall mcp-http` |
+| **Command** | `ace mcp` | `ace mcp-http` |
 | **Port** | N/A | Configurable (default 3000) |
 | **Health check** | ❌ | ✅ `/health` endpoint |
 | **Multiple clients** | ❌ (single process) | ✅ (concurrent requests) |
@@ -159,7 +159,7 @@ bash demo-http-server.sh
 
 ## Environment Variables
 
-Tất cả environment variables trong `.coderecall/.env` vẫn áp dụng:
+Tất cả environment variables trong `.ace/.env` vẫn áp dụng:
 - `EMBEDDINGS_API_KEY` / `EMBEDDINGS_API_KEYS`
 - `RERANK_API_KEY` / `RERANK_API_KEYS`
 - `LOG_LEVEL=debug` để bật debug logs

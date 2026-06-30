@@ -17,7 +17,6 @@
   "bin": {
     "ace-recall": "dist/index.js",
     "ace": "dist/index.js",
-    "coderecall": "dist/index.js",
     "cr": "dist/index.js"
   },
   "files": [

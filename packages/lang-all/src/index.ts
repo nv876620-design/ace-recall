@@ -1,14 +1,14 @@
 import type Parser from 'tree-sitter';
-import { createRuntime as createTypeScriptRuntime } from '@alistar.max/coderecall-lang-typescript';
-import { createRuntime as createKotlinRuntime } from '@alistar.max/coderecall-lang-kotlin';
-import { createRuntime as createCSharpRuntime } from '@alistar.max/coderecall-lang-csharp';
-import { createRuntime as createCppRuntime } from '@alistar.max/coderecall-lang-cpp';
-import { createRuntime as createJavaRuntime } from '@alistar.max/coderecall-lang-java';
-import { createRuntime as createRubyRuntime } from '@alistar.max/coderecall-lang-ruby';
-import { createRuntime as createCRuntime } from '@alistar.max/coderecall-lang-c';
-import { createRuntime as createPhpRuntime } from '@alistar.max/coderecall-lang-php';
-import { createRuntime as createRustRuntime } from '@alistar.max/coderecall-lang-rust';
-import { createRuntime as createSwiftRuntime } from '@alistar.max/coderecall-lang-swift';
+import { createRuntime as createTypeScriptRuntime } from '@alistar.max/ace-lang-typescript';
+import { createRuntime as createKotlinRuntime } from '@alistar.max/ace-lang-kotlin';
+import { createRuntime as createCSharpRuntime } from '@alistar.max/ace-lang-csharp';
+import { createRuntime as createCppRuntime } from '@alistar.max/ace-lang-cpp';
+import { createRuntime as createJavaRuntime } from '@alistar.max/ace-lang-java';
+import { createRuntime as createRubyRuntime } from '@alistar.max/ace-lang-ruby';
+import { createRuntime as createCRuntime } from '@alistar.max/ace-lang-c';
+import { createRuntime as createPhpRuntime } from '@alistar.max/ace-lang-php';
+import { createRuntime as createRustRuntime } from '@alistar.max/ace-lang-rust';
+import { createRuntime as createSwiftRuntime } from '@alistar.max/ace-lang-swift';
 
 export interface LanguageRuntime {
   id: string;

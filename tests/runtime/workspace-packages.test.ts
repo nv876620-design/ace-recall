@@ -8,17 +8,17 @@ type PackageDefinition = {
 };
 
 const packageDefinitions: PackageDefinition[] = [
-  { dir: 'lang-all', name: '@alistar.max/coderecall-lang-all' },
-  { dir: 'lang-typescript', name: '@alistar.max/coderecall-lang-typescript' },
-  { dir: 'lang-kotlin', name: '@alistar.max/coderecall-lang-kotlin' },
-  { dir: 'lang-csharp', name: '@alistar.max/coderecall-lang-csharp' },
-  { dir: 'lang-cpp', name: '@alistar.max/coderecall-lang-cpp' },
-  { dir: 'lang-java', name: '@alistar.max/coderecall-lang-java' },
-  { dir: 'lang-ruby', name: '@alistar.max/coderecall-lang-ruby' },
-  { dir: 'lang-c', name: '@alistar.max/coderecall-lang-c' },
-  { dir: 'lang-php', name: '@alistar.max/coderecall-lang-php' },
-  { dir: 'lang-rust', name: '@alistar.max/coderecall-lang-rust' },
-  { dir: 'lang-swift', name: '@alistar.max/coderecall-lang-swift' },
+  { dir: 'lang-all', name: '@alistar.max/ace-lang-all' },
+  { dir: 'lang-typescript', name: '@alistar.max/ace-lang-typescript' },
+  { dir: 'lang-kotlin', name: '@alistar.max/ace-lang-kotlin' },
+  { dir: 'lang-csharp', name: '@alistar.max/ace-lang-csharp' },
+  { dir: 'lang-cpp', name: '@alistar.max/ace-lang-cpp' },
+  { dir: 'lang-java', name: '@alistar.max/ace-lang-java' },
+  { dir: 'lang-ruby', name: '@alistar.max/ace-lang-ruby' },
+  { dir: 'lang-c', name: '@alistar.max/ace-lang-c' },
+  { dir: 'lang-php', name: '@alistar.max/ace-lang-php' },
+  { dir: 'lang-rust', name: '@alistar.max/ace-lang-rust' },
+  { dir: 'lang-swift', name: '@alistar.max/ace-lang-swift' },
 ];
 
 const requiredFiles = ['pnpm-workspace.yaml'];

@@ -1,4 +1,4 @@
-# ✅ CodeRecall + Augment-BYOK Integration - DONE
+# ✅ ACE + Augment-BYOK Integration - DONE
 
 ## 🎯 Status: READY TO USE
 
@@ -31,9 +31,9 @@ Trong panel:
    
    Servers:
    + Add Server:
-     Name: coderecall
+     Name: ace
      Command: node
-     Args: D:\MCP\CodeRecall\dist\index.js, mcp
+     Args: D:\MCP\ACE\dist\index.js, mcp
      
 2. Providers section:
    + Add Provider:
@@ -79,9 +79,9 @@ BYOK intercepts /chat request
 [MODE: replace]
 ├─ SKIP: Augment codebase-retrieval (-20)
 ├─ SKIP: Augment external-sources (-21)
-└─ INJECT: CodeRecall MCP context (-25)
+└─ INJECT: ACE MCP context (-25)
          ↓
-CodeRecall MCP server
+ACE MCP server
 ├─ Spawn: node dist/index.js mcp
 ├─ Query: codebase-retrieval tool
 ├─ Search: semantic + FTS + rerank
@@ -94,16 +94,16 @@ Response with code insights
 
 ### Key Points
 
-1. **`injectPosition: "replace"`** = HOÀN TOÀN thay thế Augment indexing bằng CodeRecall
+1. **`injectPosition: "replace"`** = HOÀN TOÀN thay thế Augment indexing bằng ACE
 2. **No Augment indexing** = Không còn spinner "indexing..." nữa
-3. **On-demand search** = CodeRecall chỉ search khi user chat
+3. **On-demand search** = ACE chỉ search khi user chat
 4. **100% local** = Tất cả search local, không gửi code lên cloud
 
 ---
 
 ## 📊 Comparison
 
-| Feature | Augment Native | CodeRecall MCP |
+| Feature | Augment Native | ACE MCP |
 |---------|----------------|----------------|
 | Indexing | Slow, stuck spinner | None (on-demand) ✅ |
 | Search | Cloud API | Local semantic ✅ |
@@ -125,8 +125,8 @@ View → Output → Select "Augment-BYOK"
 **Expected logs**:
 ```
 [mcp] Initializing 1 server(s)...
-[mcp] Starting server: coderecall (node D:\MCP\CodeRecall\dist\index.js mcp)
-[mcp] coderecall initialized: {"tools":[{"name":"codebase-retrieval"}]}
+[mcp] Starting server: ace (node D:\MCP\ACE\dist\index.js mcp)
+[mcp] ace initialized: {"tools":[{"name":"codebase-retrieval"}]}
 [mcp] Initialized: 1/1 servers ready
 [mcp] mcpContext injected: chars=1234 sources=1 position=replace target_len=1
 ```
@@ -152,16 +152,16 @@ View → Output → Select "Augment-BYOK"
 **Symptom**: Log shows spawn error
 
 ```
-[mcp] coderecall spawn error: ENOENT
+[mcp] ace spawn error: ENOENT
 ```
 
 **Fix**: Check path in config
 ```bash
 # Verify file exists
-ls D:\MCP\CodeRecall\dist\index.js
+ls D:\MCP\ACE\dist\index.js
 
 # Test manually
-node D:\MCP\CodeRecall\dist\index.js mcp
+node D:\MCP\ACE\dist\index.js mcp
 ```
 
 ### Issue 2: No context injected
@@ -173,16 +173,16 @@ node D:\MCP\CodeRecall\dist\index.js mcp
 2. Config: `"enabled": true, "injectPosition": "replace"`
 3. BYOK enabled: Status bar hiện "BYOK: Enabled"
 
-### Issue 3: CodeRecall API keys
+### Issue 3: ACE API keys
 
 **Symptom**: MCP returns error about API keys
 
-**Fix**: Configure CodeRecall
+**Fix**: Configure ACE
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 
 # Init config
-coderecall init
+ace init
 
 # Enter API keys:
 # - Embedding API key (OpenAI/etc)
@@ -217,7 +217,7 @@ coderecall init
 - **`before`**: MCP context → Augment context → LLM (additive)
 - **`after`**: Augment context → MCP context → LLM (supplementary)
 
-**For CodeRecall**: Dùng `replace` để disable hoàn toàn Augment indexing.
+**For ACE**: Dùng `replace` để disable hoàn toàn Augment indexing.
 
 ### Multiple MCP Servers
 
@@ -226,9 +226,9 @@ coderecall init
   "mcp": {
     "servers": [
       {
-        "name": "coderecall",
+        "name": "ace",
         "command": "node",
-        "args": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"]
+        "args": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"]
       },
       {
         "name": "filesystem",
@@ -246,9 +246,9 @@ Context sẽ merge từ tất cả servers.
 
 ## 📖 Advanced Usage
 
-### CodeRecall Environment Variables
+### ACE Environment Variables
 
-Edit `~/.coderecall/.env`:
+Edit `~/.ace/.env`:
 
 ```env
 # Embedding
@@ -275,9 +275,9 @@ Override workspace trong MCP request:
   "mcp": {
     "servers": [
       {
-        "name": "coderecall",
+        "name": "ace",
         "env": {
-          "CODERECALL_WORKSPACE": "D:\\MyProject"
+          "ACE_WORKSPACE": "D:\\MyProject"
         }
       }
     ]
@@ -300,7 +300,7 @@ Override workspace trong MCP request:
 ❌ Augment API costs
 ```
 
-### After (CodeRecall MCP)
+### After (ACE MCP)
 
 ```
 ✅ No indexing (on-demand search)
@@ -317,15 +317,15 @@ Override workspace trong MCP request:
 
 ```
 Augment-BYOK/
-├── .augment-byok.config.json          # Config với CodeRecall MCP
+├── .augment-byok.config.json          # Config với ACE MCP
 ├── dist/
 │   └── augment.vscode-augment.0.876.0-byok.20260614132106.vsix  # VSIX
 └── payload/extension/out/byok/runtime/official/
     └── mcp-retrieval.js                # MCP integration code (built-in)
 
-CodeRecall/
+ACE/
 ├── dist/index.js                       # MCP server entry
-└── ~/.coderecall/.env                  # API keys config
+└── ~/.ace/.env                  # API keys config
 ```
 
 ---
@@ -333,7 +333,7 @@ CodeRecall/
 ## 🔗 References
 
 - **Augment-BYOK MCP docs**: `D:\MCP\Augment-BYOK\docs\MCP.md`
-- **CodeRecall README**: `D:\MCP\CodeRecall\README.md`
+- **ACE README**: `D:\MCP\ACE\README.md`
 - **Config examples**: `D:\MCP\Augment-BYOK\config.example.json`
 
 ---
@@ -344,7 +344,7 @@ Install & Config:
 - [ ] VSIX installed: 0.876.0-byok.20260614132106
 - [ ] Config imported hoặc manual config
 - [ ] API key updated (Anthropic/OpenAI)
-- [ ] CodeRecall path correct: `D:\MCP\CodeRecall\dist\index.js`
+- [ ] ACE path correct: `D:\MCP\ACE\dist\index.js`
 - [ ] BYOK enabled: status bar shows "BYOK: Enabled"
 
 Verification:
@@ -355,9 +355,9 @@ Verification:
 - [ ] Chat response references actual project code
 - [ ] Instant response (no waiting for indexing)
 
-CodeRecall:
-- [ ] CodeRecall built: `pnpm build`
-- [ ] API keys configured: `coderecall init`
+ACE:
+- [ ] ACE built: `pnpm build`
+- [ ] API keys configured: `ace init`
 - [ ] MCP server starts: `node dist/index.js mcp`
 
 ---
@@ -373,5 +373,5 @@ CodeRecall:
 
 **Date**: 2026-06-14  
 **VSIX**: augment.vscode-augment.0.876.0-byok.20260614132106.vsix  
-**Integration**: CodeRecall MCP với Augment-BYOK (replace mode)  
+**Integration**: ACE MCP với Augment-BYOK (replace mode)  
 **Status**: ✅ PRODUCTION READY

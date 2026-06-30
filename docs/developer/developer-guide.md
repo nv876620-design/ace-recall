@@ -1,4 +1,4 @@
-# CodeRecall 开发者指南
+# ACE 开发者指南
 
 > 本文承接 README 中的开发者专用内容，聚焦回归测试、评测调参与维护者发版流程。
 
@@ -37,7 +37,7 @@ npm run test:benchmark
 npm run benchmark:tune
 
 # 通过 CLI 调参（支持自定义 target/k/grid）
-coderecall tune tests/benchmark/fixtures/sample-auto-tune-dataset.jsonl --target mrr --k 1,3,5 --top 5
+ace tune tests/benchmark/fixtures/sample-auto-tune-dataset.jsonl --target mrr --k 1,3,5 --top 5
 ```
 
 调参数据集最小字段：
@@ -47,7 +47,7 @@ coderecall tune tests/benchmark/fixtures/sample-auto-tune-dataset.jsonl --target
 
 ```bash
 # 查看最近 7 天隐式反馈摘要
-coderecall feedback . --days 7 --top 10
+ace feedback . --days 7 --top 10
 ```
 
 输出包含：`totalEvents`、`zeroHitRate`、`implicitSuccessRate`
@@ -57,10 +57,10 @@ coderecall feedback . --days 7 --top 10
 
 ```bash
 # 检查向量索引与 chunks_fts 一致性
-coderecall doctor .
+ace doctor .
 
 # 自动修复：删除 chunks_fts 中无对应向量的孤儿记录
-coderecall doctor . --repair
+ace doctor . --repair
 ```
 
 ## 5. 发布（维护者）
@@ -100,7 +100,7 @@ bash scripts/publish-plugins.sh --version <x.y.z>
 
 > 本节是完整配置参考，面向开发者和需要精细调优的用户。终端用户只需按 README "初始化配置" 小节填写 6 个必需变量即可。
 
-配置文件位置：`~/.coderecall/.env`（生产环境默认；开发环境会先尝试 `cwd/.env`，再回退到 `~/.coderecall/.env`）。
+配置文件位置：`~/.ace/.env`（生产环境默认；开发环境会先尝试 `cwd/.env`，再回退到 `~/.ace/.env`）。
 
 ### 6.1 必需变量
 
@@ -123,7 +123,7 @@ bash scripts/publish-plugins.sh --version <x.y.z>
 | `RERANK_TOP_N` | 20 | Rerank 返回数量 |
 | `INCLUDE_PATTERNS` | - | 额外包含模式，用于显式纳入未知扩展名（逗号分隔） |
 | `IGNORE_PATTERNS` | - | 额外忽略模式（逗号分隔） |
-| `LOG_LEVEL` | info | 日志级别；设 `debug` 可输出详细检索日志到 `~/.coderecall/logs/app.YYYY-MM-DD.log` |
+| `LOG_LEVEL` | info | 日志级别；设 `debug` 可输出详细检索日志到 `~/.ace/logs/app.YYYY-MM-DD.log` |
 
 ### 6.3 多 Key 轮转与旧变量兼容
 

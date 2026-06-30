@@ -854,7 +854,7 @@ function formatEnvMissingResponse(missingVars: string[]): {
 
   const text = `## ⚠️ 配置缺失
 
-CodeRecall 需要配置 Embedding API 才能工作。
+ACE 需要配置 Embedding API 才能工作。
 
 ### 缺失的环境变量
 ${missingVars.map((v) => `- \`${v}\``).join('\n')}

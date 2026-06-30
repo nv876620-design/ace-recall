@@ -1,9 +1,9 @@
-# ⚡ Quick Config Guide - Augment BYOK + CodeRecall
+# ⚡ Quick Config Guide - Augment BYOK + ACE
 
 ## 🚀 Method 1: Auto-generate (Recommended - 1 phút)
 
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 
 # Interactive (will prompt for API key)
 node scripts/generate-augment-config.cjs
@@ -14,7 +14,7 @@ node scripts/generate-augment-config.cjs --anthropic-key sk-ant-YOUR_KEY
 
 Script tự động:
 - ✅ Tạo `~/.augment/byok-config.json`
-- ✅ Set CodeRecall path
+- ✅ Set ACE path
 - ✅ Add API key
 - ✅ Config providers
 
@@ -41,10 +41,10 @@ Script tự động:
    ```json
    {
      "version": 1,
-     "coderecall": {
+     "ace": {
        "enabled": true,
        "mcpServerPath": "node",
-       "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"],
+       "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"],
        "autoIndex": false,
        "injectContext": true
      },
@@ -58,7 +58,7 @@ Script tự động:
    
    **⚠️ Thay đổi**:
    - `apiKey`: Your Anthropic API key
-   - `mcpServerArgs[0]`: Absolute path to `CodeRecall/dist/index.js`
+   - `mcpServerArgs[0]`: Absolute path to `ACE/dist/index.js`
 
 4. **Enable**
    ```
@@ -73,8 +73,8 @@ Script tự động:
 3. Open Augment chat
 4. Ask: "How does authentication work?"
 5. Check Output → Augment for logs:
-   [INFO] CodeRecall: Searching...
-   [INFO] CodeRecall: Injecting context { chunks: 3 }
+   [INFO] ACE: Searching...
+   [INFO] ACE: Injecting context { chunks: 3 }
 ```
 
 ## 🔧 Config Locations
@@ -83,32 +83,32 @@ Script tự động:
 |------|------|
 | **User** (global) | `~/.augment/byok-config.json` |
 | **Workspace** (project) | `.vscode/augment-byok-config.json` |
-| **CodeRecall env** | `~/.coderecall/.env` |
+| **ACE env** | `~/.ace/.env` |
 
 ## 📝 Common Config Options
 
 ### Windows Path
 ```json
 {
-  "mcpServerArgs": ["D:\\MCP\\CodeRecall\\dist\\index.js", "mcp"]
+  "mcpServerArgs": ["D:\\MCP\\ACE\\dist\\index.js", "mcp"]
 }
 ```
 
 ### Linux/Mac Path
 ```json
 {
-  "mcpServerArgs": ["/home/user/CodeRecall/dist/index.js", "mcp"]
+  "mcpServerArgs": ["/home/user/ACE/dist/index.js", "mcp"]
 }
 ```
 
 ### Using Global Command
 ```json
 {
-  "mcpServerPath": "coderecall",
+  "mcpServerPath": "ace",
   "mcpServerArgs": ["mcp"]
 }
 ```
-*Requires: `pnpm link --global` in CodeRecall repo*
+*Requires: `pnpm link --global` in ACE repo*
 
 ### Multiple Providers
 ```json
@@ -125,9 +125,9 @@ Script tự động:
 | Problem | Solution |
 |---------|----------|
 | Config not found | `Ctrl+Shift+P → BYOK: Open Config Panel` |
-| MCP server won't start | Test: `node D:\MCP\CodeRecall\dist\index.js mcp` |
+| MCP server won't start | Test: `node D:\MCP\ACE\dist\index.js mcp` |
 | Indexing still runs | Reinstall VSIX, reload VS Code |
-| No CodeRecall context | Check Output → Augment for errors |
+| No ACE context | Check Output → Augment for errors |
 | Wrong workspace | Open folder (not file), or set `workspacePath` in config |
 
 ## 📖 Full Guide

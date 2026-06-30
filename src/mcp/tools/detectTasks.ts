@@ -226,7 +226,7 @@ export async function handleDetectTasks(args: z.infer<typeof detectTasksSchema>)
       ...tasks.map((t) => `  ${t.name.padEnd(30)} ${t.description || t.command}`),
       '\nTo run a task, use:',
       '  MCP: run-task tool',
-      '  CLI: coderecall run-task <name>',
+      '  CLI: ace run-task <name>',
     ].join('\n');
 
     return {

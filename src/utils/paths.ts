@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const CODE_RECALL_DIRNAME = '.coderecall';
+const ACE_DIRNAME = '.ace';
 const DEFAULT_ENV_NAME = '.env';
-const FALLBACK_BASE_DIR = path.join(os.tmpdir(), 'coderecall');
+const FALLBACK_BASE_DIR = path.join(os.tmpdir(), 'ace');
 
 function ensureDirWritable(dirPath: string): boolean {
   try {
@@ -17,7 +17,7 @@ function ensureDirWritable(dirPath: string): boolean {
 }
 
 function resolveHomeBaseDir(): string {
-  return path.join(os.homedir(), CODE_RECALL_DIRNAME);
+  return path.join(os.homedir(), ACE_DIRNAME);
 }
 
 export function getPreferredHomeConfigBaseDir(): string {
@@ -47,7 +47,7 @@ export function getConfigBaseDir(): string {
  * 获取运行时数据根目录。
  *
  * 索引库、向量库、锁文件都应共用这一根目录。
- * 优先使用 HOME 下的 .coderecall；若当前环境不允许写入，则自动回退到临时目录。
+ * 优先使用 HOME 下的 .ace；若当前环境不允许写入，则自动回退到临时目录。
  */
 export function getDataBaseDir(): string {
   if (cachedDataBaseDir) {

@@ -1,5 +1,5 @@
 /**
- * CodeRecall MCP Server
+ * ACE MCP Server
  *
  * 提供代码库检索能力的 Model Context Protocol 服务器
  */
@@ -8,20 +8,20 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../utils/logger.js';
-import { 
-  codebaseRetrievalSchema, 
-  handleCodebaseRetrieval,
-  generateCommitMessageSchema,
-  handleGenerateCommitMessage,
+import {
+  codebaseRetrievalSchema,
   detectTasksSchema,
-  handleDetectTasks
+  generateCommitMessageSchema,
+  handleCodebaseRetrieval,
+  handleDetectTasks,
+  handleGenerateCommitMessage,
 } from './tools/index.js';
 
 // ===========================================
 // 服务器配置
 // ===========================================
 
-const SERVER_NAME = 'coderecall';
+const SERVER_NAME = 'ace';
 
 // ===========================================
 // 工具定义

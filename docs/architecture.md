@@ -1,6 +1,6 @@
-# 🧠 CodeRecall Architecture
+# 🧠 ACE Architecture
 
-> **CodeRecall** 是一个专为 AI 代码助手设计的语义检索引擎，结合了混合检索、上下文图扩展以及精确的 Token 打包控制策略。
+> **ACE** 是一个专为 AI 代码助手设计的语义检索引擎，结合了混合检索、上下文图扩展以及精确的 Token 打包控制策略。
 
 以下是高度浓缩的核心架构流程图，展示了从索引构建到检索分析的完整生命周期。
 
@@ -133,4 +133,4 @@ flowchart TD
 
 > [!TIP]
 > **日常排查与优化**
-> 您可以使用 `coderecall doctor . --repair` 随时审计与自愈索引状态；或者使用 `coderecall tune <dataset>` 基于离线反馈数据自动调参，寻找最佳的 RRF/TopK 超参组合。
+> 您可以使用 `ace doctor . --repair` 随时审计与自愈索引状态；或者使用 `ace tune <dataset>` 基于离线反馈数据自动调参，寻找最佳的 RRF/TopK 超参组合。

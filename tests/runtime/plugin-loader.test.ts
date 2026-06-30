@@ -8,10 +8,10 @@ import { DEFAULT_PLUGIN_CANDIDATES, discoverPluginPackages } from '../../src/chu
 
 test('默认插件候选应切换到四个默认核心语言插件', () => {
   assert.deepEqual(DEFAULT_PLUGIN_CANDIDATES, [
-    '@alistar.max/coderecall-lang-typescript',
-    '@alistar.max/coderecall-lang-kotlin',
-    '@alistar.max/coderecall-lang-java',
-    '@alistar.max/coderecall-lang-rust',
+    '@alistar.max/ace-lang-typescript',
+    '@alistar.max/ace-lang-kotlin',
+    '@alistar.max/ace-lang-java',
+    '@alistar.max/ace-lang-rust',
   ]);
 });
 
@@ -56,7 +56,7 @@ test('应能发现有效插件 runtime', async () => {
 
 test('缺失插件包时应返回空数组并记录 warn', async () => {
   const missingWarns: string[] = [];
-  const missing = await discoverPluginPackages(['@alistar.max/coderecall-lang-missing'], {
+  const missing = await discoverPluginPackages(['@alistar.max/ace-lang-missing'], {
     logger: {
       warn: (...args) => {
         missingWarns.push(args.map((arg) => String(arg)).join(' '));
@@ -70,7 +70,7 @@ test('缺失插件包时应返回空数组并记录 warn', async () => {
 
 test('suppressMissingModuleError=true 时应忽略缺失模块警告', async () => {
   const missingWarns: string[] = [];
-  const missing = await discoverPluginPackages(['@alistar.max/coderecall-lang-missing'], {
+  const missing = await discoverPluginPackages(['@alistar.max/ace-lang-missing'], {
     suppressMissingModuleError: true,
     logger: {
       warn: (...args) => {

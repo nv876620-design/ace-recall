@@ -26,12 +26,12 @@ Extension Augment-BYOK (v0.876.0-byok) bị lặp indexing workspace `d:\MCP\Orc
 
 #### Windows:
 ```cmd
-D:\MCP\CodeRecall\scripts\fix-augment-indexing-loop.bat
+D:\MCP\ACE\scripts\fix-augment-indexing-loop.bat
 ```
 
 #### Linux/Mac:
 ```bash
-bash D:/MCP/CodeRecall/scripts/fix-augment-indexing-loop.sh
+bash D:/MCP/ACE/scripts/fix-augment-indexing-loop.sh
 ```
 
 Script sẽ:
@@ -75,7 +75,7 @@ Sửa file `~/.vscode/extensions/augment.vscode-augment-*/byok-config.json`:
 {
   "official": {
     "completionUrl": "http://localhost:3000/v1",  // Thêm /v1
-    "apiToken": "local-coderecall-bypass"
+    "apiToken": "local-ace-bypass"
   }
 }
 ```

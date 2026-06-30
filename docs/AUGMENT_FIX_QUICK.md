@@ -13,7 +13,7 @@ Extension có `apiToken` trong config → Nghĩ đang ở Cloud Mode → Cố up
 ### 1. Chạy script tự động (Khuyến nghị)
 
 ```bash
-node D:\MCP\CodeRecall\scripts\fix-augment-config.cjs
+node D:\MCP\ACE\scripts\fix-augment-config.cjs
 ```
 
 Script sẽ tự động:
@@ -38,7 +38,7 @@ Restart VSCode → Extension chuyển sang Pure Local Mode → Không upload gì
 
 Sau đó **đóng VSCode**, chạy:
 ```cmd
-D:\MCP\CodeRecall\scripts\fix-augment-indexing-loop.bat
+D:\MCP\ACE\scripts\fix-augment-indexing-loop.bat
 ```
 
 ## Hoặc

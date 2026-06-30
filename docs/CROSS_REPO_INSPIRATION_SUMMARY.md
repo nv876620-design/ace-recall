@@ -1,6 +1,6 @@
 # Cross-Repo Inspiration Summary
 
-Tổng hợp tất cả các tính năng mới được lấy cảm hứng từ 2 repos của nullmastermind và áp dụng vào CodeRecall.
+Tổng hợp tất cả các tính năng mới được lấy cảm hứng từ 2 repos của nullmastermind và áp dụng vào ACE.
 
 ## 📚 Source Repositories
 
@@ -30,7 +30,7 @@ Tổng hợp tất cả các tính năng mới được lấy cảm hứng từ 
 **Usage:**
 ```bash
 # CLI
-coderecall git-msg [path] [--style conventional|simple|detailed] [--no-body]
+ace git-msg [path] [--style conventional|simple|detailed] [--no-body]
 
 # MCP
 generate-commit-message {
@@ -68,7 +68,7 @@ feat(mcp): add AI commit message and task detection
 **Usage:**
 ```bash
 # CLI
-coderecall tasks [path]
+ace tasks [path]
 
 # MCP
 detect-tasks {
@@ -370,7 +370,7 @@ src/
 - ✅ 2 new MCP tools (commit messages, tasks)
 - ✅ 2 new CLI commands (`git-msg`, `tasks`)
 - 🔄 Field-qualified search filters (4 types)
-- 🔄 15+ tasks detected in CodeRecall repo
+- 🔄 15+ tasks detected in ACE repo
 - 📝 Target: 90%+ accuracy for AI commit messages
 
 ### Qualitative
@@ -407,10 +407,10 @@ $ pnpm build
 
 ### Test Results
 ```bash
-$ coderecall tasks
-✅ Detected 15 tasks in CodeRecall repo (pnpm, make targets)
+$ ace tasks
+✅ Detected 15 tasks in ACE repo (pnpm, make targets)
 
-$ coderecall git-msg
+$ ace git-msg
 ✅ Successfully generated commit message (would test with staged changes)
 ```
 

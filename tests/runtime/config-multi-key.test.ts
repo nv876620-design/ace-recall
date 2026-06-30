@@ -23,7 +23,8 @@ const MANAGED_ENV_KEYS = [
   'EMBEDDINGS_KEY_MAX_RPMS',
   'EMBEDDINGS_KEY_MAX_TPMS',
   'EMBEDDINGS_RATE_PROFILE',
-  'CODE_RECALL_PROFILE',
+  'ACE_PROFILE',
+  'ACE_PROFILE',
   'RERANK_API_KEY',
   'RERANK_API_KEYS',
   'RERANK_BASE_URL',
@@ -250,7 +251,7 @@ test('index profile 应映射为分片配置', { concurrency: false }, () => {
       EMBEDDINGS_API_KEYS: 'key-a',
       EMBEDDINGS_BASE_URL: 'https://example.com/embeddings',
       EMBEDDINGS_MODEL: 'text-embedding-model',
-      CODE_RECALL_PROFILE: 'quality',
+      ACE_PROFILE: 'quality',
     },
     () => {
       const config = getEmbeddingConfig();
@@ -266,9 +267,9 @@ test('index profile 应映射为分片配置', { concurrency: false }, () => {
 });
 
 function readIsMcpMode(argv: string[]): boolean {
-  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'coderecall-config-mode-'));
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'ace-config-mode-'));
   const script = `
-    process.argv = ${JSON.stringify(['node', 'coderecall', ...argv])};
+    process.argv = ${JSON.stringify(['node', 'ace', ...argv])};
     const mod = await import('./src/config.ts');
     console.log(String(mod.isMcpMode));
   `;

@@ -1,14 +1,14 @@
 /**
  * Token Manager for User Access
- * 
+ *
  * Manages API tokens for users to access ACE services
  */
 
-import { randomBytes, createHash } from 'crypto';
 import Database from 'better-sqlite3';
-import { getProjectsDbPath } from '../utils/paths.js';
+import { createHash, randomBytes } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import path, { dirname } from 'path';
+import { getDataBaseDir } from '../utils/paths.js';
 
 export interface Token {
   id: string;
@@ -31,15 +31,15 @@ export interface CreateTokenOptions {
  * Initialize tokens database
  */
 function initTokensDb(): Database.Database {
-  const dbPath = getProjectsDbPath().replace('projects.db', 'tokens.db');
+  const dbPath = path.join(getDataBaseDir(), 'tokens.db');
   const dbDir = dirname(dbPath);
-  
+
   if (!existsSync(dbDir)) {
     mkdirSync(dbDir, { recursive: true });
   }
-  
+
   const db = new Database(dbPath);
-  
+
   // Create tokens table
   db.exec(`
     CREATE TABLE IF NOT EXISTS tokens (
@@ -57,7 +57,7 @@ function initTokensDb(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_tokens_hash ON tokens(token_hash);
     CREATE INDEX IF NOT EXISTS idx_tokens_active ON tokens(is_active);
   `);
-  
+
   return db;
 }
 
@@ -80,23 +80,23 @@ export function hashToken(token: string): string {
  */
 export function createToken(options: CreateTokenOptions): { token: string; id: string } {
   const db = initTokensDb();
-  
+
   const token = generateToken();
   const tokenHash = hashToken(token);
   const id = randomBytes(16).toString('hex');
   const createdAt = Date.now();
-  const expiresAt = options.expiresInDays 
-    ? createdAt + (options.expiresInDays * 24 * 60 * 60 * 1000)
+  const expiresAt = options.expiresInDays
+    ? createdAt + options.expiresInDays * 24 * 60 * 60 * 1000
     : null;
-  
+
   const stmt = db.prepare(`
     INSERT INTO tokens (id, token_hash, user_id, description, created_at, expires_at)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-  
+
   stmt.run(id, tokenHash, options.userId, options.description || null, createdAt, expiresAt);
   db.close();
-  
+
   return { token, id };
 }
 
@@ -107,40 +107,40 @@ export function verifyToken(token: string): { valid: boolean; userId?: string; t
   try {
     const db = initTokensDb();
     const tokenHash = hashToken(token);
-    
+
     const stmt = db.prepare(`
       SELECT id, user_id, expires_at, is_active 
       FROM tokens 
       WHERE token_hash = ?
     `);
-    
+
     const row = stmt.get(tokenHash) as any;
-    
+
     if (!row) {
       db.close();
       return { valid: false };
     }
-    
+
     // Check if active
     if (!row.is_active) {
       db.close();
       return { valid: false };
     }
-    
+
     // Check expiration
     if (row.expires_at && Date.now() > row.expires_at) {
       db.close();
       return { valid: false };
     }
-    
+
     // Update last used timestamp
     const updateStmt = db.prepare(`
       UPDATE tokens SET last_used_at = ? WHERE id = ?
     `);
     updateStmt.run(Date.now(), row.id);
-    
+
     db.close();
-    
+
     return {
       valid: true,
       userId: row.user_id,
@@ -156,18 +156,18 @@ export function verifyToken(token: string): { valid: boolean; userId?: string; t
  */
 export function listTokens(userId: string): Token[] {
   const db = initTokensDb();
-  
+
   const stmt = db.prepare(`
     SELECT id, user_id, description, created_at, expires_at, last_used_at
     FROM tokens
     WHERE user_id = ? AND is_active = 1
     ORDER BY created_at DESC
   `);
-  
+
   const rows = stmt.all(userId) as any[];
   db.close();
-  
-  return rows.map(row => ({
+
+  return rows.map((row) => ({
     id: row.id,
     token: '***', // Never return actual token
     tokenHash: '***',
@@ -184,14 +184,14 @@ export function listTokens(userId: string): Token[] {
  */
 export function revokeToken(tokenId: string): boolean {
   const db = initTokensDb();
-  
+
   const stmt = db.prepare(`
     UPDATE tokens SET is_active = 0 WHERE id = ?
   `);
-  
+
   const result = stmt.run(tokenId);
   db.close();
-  
+
   return result.changes > 0;
 }
 
@@ -200,14 +200,14 @@ export function revokeToken(tokenId: string): boolean {
  */
 export function cleanupExpiredTokens(): number {
   const db = initTokensDb();
-  
+
   const stmt = db.prepare(`
     DELETE FROM tokens 
     WHERE expires_at IS NOT NULL AND expires_at < ?
   `);
-  
+
   const result = stmt.run(Date.now());
   db.close();
-  
+
   return result.changes;
 }

@@ -124,7 +124,7 @@ authentication logic kind:class lang:typescript path:auth name:Auth
 
 ### CLI
 ```bash
-coderecall search-context \
+ace search-context \
   --repo-path . \
   --information-request "authentication kind:function lang:typescript path:src/api"
 ```
@@ -139,7 +139,7 @@ coderecall search-context \
 
 ### Programmatic
 ```typescript
-import { parseQuery, applyFilters, SearchService } from '@coderecall/search';
+import { parseQuery, applyFilters, SearchService } from '@ace/search';
 
 // Parse query
 const parsed = parseQuery("auth logic kind:function lang:typescript");

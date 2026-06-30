@@ -1,8 +1,8 @@
-# CodeRecall + Augment BYOK - Quick Start Guide
+# ACE + Augment BYOK - Quick Start Guide
 
 ## Tổng quan
 
-Tích hợp CodeRecall MCP với Augment BYOK để:
+Tích hợp ACE MCP với Augment BYOK để:
 - **Privacy**: Code search 100% local, không gửi lên cloud
 - **Accuracy**: Semantic search tốt hơn context mặc định
 - **Speed**: Instant response, không network latency
@@ -10,15 +10,15 @@ Tích hợp CodeRecall MCP với Augment BYOK để:
 
 ## Prerequisites
 
-1. **CodeRecall** đã build:
+1. **ACE** đã build:
    ```bash
-   cd D:\MCP\CodeRecall
+   cd D:\MCP\ACE
    pnpm build
    ```
 
-2. **CodeRecall config** đã setup:
+2. **ACE config** đã setup:
    ```bash
-   coderecall init
+   ace init
    # Nhập API keys cho embedding và reranker
    ```
 
@@ -35,15 +35,15 @@ Tích hợp CodeRecall MCP với Augment BYOK để:
 
 1. Command Palette: `BYOK: Open Config Panel`
 
-2. Enable CodeRecall integration:
+2. Enable ACE integration:
    ```json
    {
      "version": 1,
-     "coderecall": {
+     "ace": {
        "enabled": true,
        "mcpServerPath": "node",
        "mcpServerArgs": [
-         "D:\\MCP\\CodeRecall\\dist\\index.js",
+         "D:\\MCP\\ACE\\dist\\index.js",
          "mcp"
        ],
        "autoIndex": true,
@@ -78,13 +78,13 @@ User opens folder
      ↓
 Augment triggers workspace watcher
      ↓
-CodeRecall MCP indexes codebase
+ACE MCP indexes codebase
      ↓
 User chats with Augment
      ↓
 Context injector extracts query
      ↓
-CodeRecall MCP searches semantically
+ACE MCP searches semantically
      ↓
 Results injected into LLM context
      ↓
@@ -95,8 +95,8 @@ LLM responds with code insights
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `enabled` | `false` | Enable/disable CodeRecall integration |
-| `mcpServerPath` | `"coderecall"` | Path to CodeRecall binary/command |
+| `enabled` | `false` | Enable/disable ACE integration |
+| `mcpServerPath` | `"ace"` | Path to ACE binary/command |
 | `mcpServerArgs` | `["mcp"]` | Arguments for MCP server |
 | `autoIndex` | `true` | Auto-index on folder open |
 | `injectContext` | `true` | Inject search results into context |
@@ -105,14 +105,14 @@ LLM responds with code insights
 
 ### 1. MCP Server Not Found
 
-**Error**: `spawn coderecall ENOENT`
+**Error**: `spawn ace ENOENT`
 
 **Fix**: Use absolute path trong config:
 ```json
 {
   "mcpServerPath": "node",
   "mcpServerArgs": [
-    "D:\\MCP\\CodeRecall\\dist\\index.js",
+    "D:\\MCP\\ACE\\dist\\index.js",
     "mcp"
   ]
 }
@@ -127,8 +127,8 @@ LLM responds with code insights
 
 **Debug**: Check Output panel → "Augment" channel:
 ```
-[INFO] CodeRecall: Searching codebase { query: '...', path: '...' }
-[INFO] CodeRecall: Injected context { chunks: N, contextSize: ... }
+[INFO] ACE: Searching codebase { query: '...', path: '...' }
+[INFO] ACE: Injected context { chunks: N, contextSize: ... }
 ```
 
 ### 3. Slow Indexing
@@ -138,7 +138,7 @@ LLM responds with code insights
 **Workaround**: Pre-index manually:
 ```bash
 cd /path/to/repo
-coderecall index .
+ace index .
 ```
 
 ## Verification
@@ -147,16 +147,16 @@ coderecall index .
 
 VS Code Output Panel → "Augment":
 ```
-[INFO] CodeRecall: Connecting to MCP server
-[INFO] CodeRecall: Connected successfully
-[INFO] CodeRecall: Searching codebase
-[INFO] CodeRecall: Injected context { chunks: 3, contextSize: 1234 }
+[INFO] ACE: Connecting to MCP server
+[INFO] ACE: Connected successfully
+[INFO] ACE: Searching codebase
+[INFO] ACE: Injected context { chunks: 3, contextSize: 1234 }
 ```
 
 ### Test Script
 
 ```bash
-cd D:\MCP\CodeRecall
+cd D:\MCP\ACE
 node scripts/test-augment-mcp-client.cjs
 ```
 
@@ -177,7 +177,7 @@ Expected output:
 
 ### Multiple Workspaces
 
-CodeRecall tự động phát hiện workspace path. Mỗi workspace được index riêng.
+ACE tự động phát hiện workspace path. Mỗi workspace được index riêng.
 
 ### Custom Search Options
 
@@ -191,7 +191,7 @@ const result = await client.searchCodebase(query, repoPath, {
 
 ### Performance Tuning
 
-Edit `~/.coderecall/.env`:
+Edit `~/.ace/.env`:
 ```env
 EMBEDDINGS_MAX_CONCURRENCY=10  # Parallel embedding requests
 RERANK_TOP_N=20               # Number of results to rerank
@@ -206,6 +206,6 @@ RERANK_TOP_N=20               # Number of results to rerank
 
 ## References
 
-- [Technical Design](./AUGMENT_BYOK_CODERECALL_INTEGRATION.md)
+- [Technical Design](./AUGMENT_BYOK_ACE_INTEGRATION.md)
 - [Integration Summary](./AUGMENT_INTEGRATION_SUMMARY.md)
-- [CodeRecall README](../README.md)
+- [ACE README](../README.md)

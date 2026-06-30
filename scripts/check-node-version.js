@@ -7,20 +7,20 @@
  */
 
 const rawVersion =
-  process.env.CODERECALL_NODE_VERSION_OVERRIDE || process.version;
+  process.env.ACE_NODE_VERSION_OVERRIDE || process.version;
 
 const match = /^v(\d+)\./.exec(rawVersion);
 const major = match ? Number(match[1]) : Number.NaN;
 
 if (!Number.isFinite(major)) {
-  console.error(`[CodeRecall] 无法识别当前 Node 版本：${rawVersion}`);
+  console.error(`[ACE] 无法识别当前 Node 版本：${rawVersion}`);
   process.exit(1);
 }
 
 if (major >= 24) {
   console.error(
     [
-      '[CodeRecall] 当前暂不支持 Node 24 及以上版本安装。',
+      '[ACE] 当前暂不支持 Node 24 及以上版本安装。',
       `检测到版本：${rawVersion}`,
       '原因：tree-sitter 原生模块在该安装链路下会触发本地编译失败。',
       '建议：请切换到 Node 22 LTS 后重新安装。',
