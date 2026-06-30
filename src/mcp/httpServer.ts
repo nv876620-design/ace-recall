@@ -1342,6 +1342,7 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
       <div class="card">
         <div class="tabs">
           <div class="tab active" data-tab="mcp" id="tab-mcp">MCP Integration</div>
+          <div class="tab" data-tab="tokens" id="tab-tokens">API Tokens</div>
           <div class="tab" data-tab="system" id="tab-system">System Info</div>
         </div>
         
@@ -1389,7 +1390,44 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
             </div>
           </div>
         </div>
-        
+
+        <div class="tab-content" data-content="tokens">
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Create New Token</h3>
+            <form id="token-form" style="display: flex; flex-direction: column; gap: 12px;">
+              <input type="text" id="token-userId" placeholder="User ID (e.g., developer)"
+                style="width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" required />
+              <input type="text" id="token-description" placeholder="Description (optional)"
+                style="width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+              <input type="number" id="token-expires" placeholder="Expires in days (optional, e.g., 365)"
+                style="width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+              <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">Create Token</button>
+            </form>
+          </div>
+
+          <div id="token-result" style="display: none; margin-bottom: 24px; padding: 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--success); margin-bottom: 8px;">✓ Token Created</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Save this token securely - it won't be shown again!</div>
+            <div style="background: var(--input-bg); padding: 12px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; color: var(--text-primary); position: relative;">
+              <span id="token-value"></span>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('token-value').textContent)"
+                style="position: absolute; top: 8px; right: 8px; padding: 4px 8px; background: var(--primary); border: none; border-radius: 4px; color: white; font-size: 11px; cursor: pointer;">Copy</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary);">Active Tokens</h3>
+              <input type="text" id="token-list-userId" placeholder="User ID to filter"
+                style="padding: 6px 10px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; color: var(--text-primary); font-size: 13px; width: 180px;" />
+              <button onclick="loadTokens()" class="btn" style="padding: 6px 14px; font-size: 13px;">Load</button>
+            </div>
+            <div id="tokens-list" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--text-secondary); font-size: 13px; text-align: center; padding: 20px;">Enter a User ID and click Load to view tokens</div>
+            </div>
+          </div>
+        </div>
+
         <div class="tab-content" data-content="system">
           <div class="status-row">
             <span class="status-label">Server Version:</span>
@@ -1529,6 +1567,116 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
         e.preventDefault();
         alert('Vui lòng xác nhận mật khẩu chính xác trước khi lưu!');
       }
+    });
+
+    // Token Management Functions
+    const tokenForm = document.getElementById('token-form');
+    const tokenResult = document.getElementById('token-result');
+    const tokenValue = document.getElementById('token-value');
+
+    tokenForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const userId = document.getElementById('token-userId').value;
+      const description = document.getElementById('token-description').value;
+      const expiresInDays = document.getElementById('token-expires').value;
+
+      try {
+        const response = await fetch('/admin/tokens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            description: description || undefined,
+            expiresInDays: expiresInDays ? parseInt(expiresInDays, 10) : undefined,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          tokenValue.textContent = data.token;
+          tokenResult.style.display = 'block';
+          tokenForm.reset();
+          // Reload tokens if same user
+          const filterUserId = document.getElementById('token-list-userId').value;
+          if (filterUserId === userId) {
+            loadTokens();
+          }
+        } else {
+          alert('Failed to create token: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error creating token: ' + err.message);
+      }
+    });
+
+    window.loadTokens = async function() {
+      const userId = document.getElementById('token-list-userId').value;
+      if (!userId) {
+        alert('Please enter a User ID');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/tokens?userId=' + encodeURIComponent(userId));
+        const data = await response.json();
+
+        const listContainer = document.getElementById('tokens-list');
+        if (!data.success || data.tokens.length === 0) {
+          listContainer.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px; text-align: center; padding: 20px;">No tokens found for this user</div>';
+          return;
+        }
+
+        listContainer.innerHTML = data.tokens.map(token => {
+          const createdDate = new Date(token.createdAt).toLocaleString();
+          const expiresDate = token.expiresAt ? new Date(token.expiresAt).toLocaleString() : 'Never';
+          const lastUsedDate = token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleString() : 'Never';
+          const isActive = token.isActive === 1;
+
+          return \`
+            <div style="padding: 14px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); font-family: 'Courier New', monospace;">
+                  \${token.id}
+                </div>
+                <span style="padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; \${isActive ? 'background: rgba(16, 185, 129, 0.15); color: var(--success);' : 'background: rgba(239, 68, 68, 0.15); color: var(--danger);'}">
+                  \${isActive ? 'ACTIVE' : 'REVOKED'}
+                </span>
+              </div>
+              \${token.description ? \`<div style="font-size: 12px; color: var(--text-secondary);">\${token.description}</div>\` : ''}
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; color: var(--text-secondary);">
+                <div><strong>Created:</strong> \${createdDate}</div>
+                <div><strong>Expires:</strong> \${expiresDate}</div>
+                <div><strong>Last used:</strong> \${lastUsedDate}</div>
+              </div>
+              \${isActive ? \`<button onclick="revokeToken('\${token.id}')" style="padding: 6px 12px; background: var(--danger); border: none; border-radius: 6px; color: white; font-size: 12px; cursor: pointer; font-weight: 500; margin-top: 4px;">Revoke Token</button>\` : ''}
+            </div>
+          \`;
+        }).join('');
+      } catch (err) {
+        alert('Error loading tokens: ' + err.message);
+      }
+    };
+
+    window.revokeToken = async function(tokenId) {
+      if (!confirm('Are you sure you want to revoke this token? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/tokens/' + tokenId, {
+          method: 'DELETE',
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          loadTokens();
+        } else {
+          alert('Failed to revoke token');
+        }
+      } catch (err) {
+        alert('Error revoking token: ' + err.message);
+      }
+    };
     });
 
     // Success alert auto-hide
@@ -1852,6 +2000,88 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
     }
 
     res.redirect('/?success=true');
+  });
+
+  // API Token Management Endpoints
+  app.post('/admin/tokens', async (req: Request, res: Response) => {
+    const config = getAdminAuthConfig();
+    const sessionToken = (req as any).cookies?.ace_session;
+    const isAuthenticated = sessionToken && verifySessionToken(sessionToken, config.password!);
+
+    if (!isAuthenticated) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { createToken } = await import('../auth/tokenManager.js');
+      const { userId, description, expiresInDays } = req.body;
+
+      if (!userId || typeof userId !== 'string') {
+        return res.status(400).json({ error: 'userId is required' });
+      }
+
+      const result = createToken({
+        userId,
+        description: description || undefined,
+        expiresInDays: expiresInDays ? parseInt(expiresInDays, 10) : undefined,
+      });
+
+      res.json({
+        success: true,
+        token: result.token,
+        tokenId: result.id,
+        userId,
+      });
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Failed to create token');
+      res.status(500).json({ error: 'Failed to create token' });
+    }
+  });
+
+  app.get('/admin/tokens', async (req: Request, res: Response) => {
+    const config = getAdminAuthConfig();
+    const sessionToken = (req as any).cookies?.ace_session;
+    const isAuthenticated = sessionToken && verifySessionToken(sessionToken, config.password!);
+
+    if (!isAuthenticated) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { listTokens } = await import('../auth/tokenManager.js');
+      const { userId } = req.query;
+
+      if (!userId || typeof userId !== 'string') {
+        return res.status(400).json({ error: 'userId query parameter is required' });
+      }
+
+      const tokens = listTokens(userId);
+      res.json({ success: true, tokens });
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Failed to list tokens');
+      res.status(500).json({ error: 'Failed to list tokens' });
+    }
+  });
+
+  app.delete('/admin/tokens/:tokenId', async (req: Request, res: Response) => {
+    const config = getAdminAuthConfig();
+    const sessionToken = (req as any).cookies?.ace_session;
+    const isAuthenticated = sessionToken && verifySessionToken(sessionToken, config.password!);
+
+    if (!isAuthenticated) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { revokeToken } = await import('../auth/tokenManager.js');
+      const { tokenId } = req.params;
+
+      const success = revokeToken(tokenId);
+      res.json({ success });
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Failed to revoke token');
+      res.status(500).json({ error: 'Failed to revoke token' });
+    }
   });
 
   // Setup Streamable HTTPServer Transport
