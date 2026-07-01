@@ -4,7 +4,7 @@
  * Provides simple admin password protection for the HTTP server
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 export interface AdminAuthConfig {
   /** Admin password (plain text or hashed) */
@@ -65,7 +65,7 @@ export function createAdminAuthMiddleware() {
     // Check for Authorization header (Basic Auth)
     const authHeader = req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith('Basic ')) {
+    if (authHeader?.startsWith('Basic ')) {
       const base64Credentials = authHeader.split(' ')[1];
       const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
       const [username, password] = credentials.split(':');

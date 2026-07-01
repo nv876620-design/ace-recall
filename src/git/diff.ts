@@ -3,7 +3,6 @@
  */
 
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 
 export interface GitDiffResult {
   diff: string;

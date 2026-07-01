@@ -64,7 +64,7 @@ export class ACEMCPClient {
               Authorization: `Bearer ${this.token}`,
             },
           }) as EventSource;
-        } catch (err) {
+        } catch (_err) {
           reject(new Error('EventSource not available. Install "eventsource" package for Node.js'));
           return;
         }

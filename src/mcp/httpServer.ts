@@ -6,7 +6,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -225,7 +224,7 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-function getSessionCookie(cookieHeader?: string): string | undefined {
+function _getSessionCookie(cookieHeader?: string): string | undefined {
   if (!cookieHeader) return undefined;
   const match = cookieHeader.match(/(?:^|; )ace_session=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : undefined;
@@ -1766,7 +1765,7 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
 /**
  * Tạo và cấu hình HTTP server app
  */
-export function createHttpServerApp(host = '127.0.0.1'): Express {
+export function createHttpServerApp(_host = '127.0.0.1'): Express {
   const app = express();
   const server = createMcpServer();
 
@@ -1935,7 +1934,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
       const sessionToken = generateSessionToken(config.password!);
       res.setHeader(
         'Set-Cookie',
-        'ace_session=' + encodeURIComponent(sessionToken) + '; Path=/; HttpOnly; Max-Age=86400',
+        `ace_session=${encodeURIComponent(sessionToken)}; Path=/; HttpOnly; Max-Age=86400`,
       );
       return res.redirect('/');
     } else {
@@ -2210,7 +2209,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
   /**
    * GET /mcp/stats - Session statistics (authenticated)
    */
-  app.get('/mcp/stats', requireAuth, (req: Request, res: Response) => {
+  app.get('/mcp/stats', requireAuth, (_req: Request, res: Response) => {
     const stats = sessionManager.getStats();
     res.json(stats);
   });

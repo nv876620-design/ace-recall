@@ -64,7 +64,7 @@ export function parseQuery(query: string): ParsedQuery {
       if (!filters[normalizedField]) {
         filters[normalizedField] = [];
       }
-      filters[normalizedField]!.push(value);
+      filters[normalizedField]?.push(value);
     }
 
     lastIndex = fieldPattern.lastIndex;

@@ -5,7 +5,6 @@
  * (package.json, Makefile, Justfile, etc.)
  */
 
-import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';

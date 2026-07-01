@@ -4,7 +4,7 @@
  * Manages persistent SSE connections with authentication and lifecycle
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import type { Response } from 'express';
 import { logger } from '../utils/logger.js';
 

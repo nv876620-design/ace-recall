@@ -7,7 +7,6 @@ import { getDataBaseDir } from '../utils/paths.js';
 
 export class EmbeddingCache {
   private cacheDir: string;
-  private model: string;
 
   constructor(model: string, customBaseDir?: string) {
     this.model = model;

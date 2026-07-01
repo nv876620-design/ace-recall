@@ -53,7 +53,8 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
   if (!token) {
     res.status(401).json({
       error: 'Unauthorized',
-      message: 'Missing or invalid token. Provide via: Authorization: Bearer <token> header OR ?token=<token> query parameter',
+      message:
+        'Missing or invalid token. Provide via: Authorization: Bearer <token> header OR ?token=<token> query parameter',
     });
     return;
   }

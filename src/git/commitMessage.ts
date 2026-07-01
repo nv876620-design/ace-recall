@@ -45,7 +45,7 @@ export async function generateCommitMessage(
   // Note: This is a workaround - ideally we'd use a dedicated LLM endpoint
   // But reranker can work for simple text generation tasks
   try {
-    const rerankerClient = getRerankerClient();
+    const _rerankerClient = getRerankerClient();
 
     // Use reranker's underlying API for generation
     // This is hacky but works if the endpoint supports completion
