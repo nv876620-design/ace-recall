@@ -2075,7 +2075,7 @@ export function createHttpServerApp(host = '127.0.0.1'): Express {
       const { revokeToken } = await import('../auth/tokenManager.js');
       const { tokenId } = req.params;
 
-      const success = revokeToken(tokenId);
+      const success = revokeToken(tokenId as string);
       res.json({ success });
     } catch (err) {
       logger.error({ error: (err as Error).message }, 'Failed to revoke token');
