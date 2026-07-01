@@ -11,8 +11,11 @@ WORKDIR /app
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy .npmrc first to configure pnpm before install
+COPY .npmrc ./
+
 # Copy package files and scripts
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY scripts ./scripts
 
 # Install dependencies using hoisted node-linker so node_modules is self-contained (no symlinks)
