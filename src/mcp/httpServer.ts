@@ -1677,7 +1677,6 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
         alert('Error revoking token: ' + err.message);
       }
     };
-    });
 
     // Success alert auto-hide
     const successAlert = document.getElementById('success-alert');
