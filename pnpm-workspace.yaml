@@ -19,4 +19,4 @@ allowBuilds:
   tree-sitter-rust: true
   tree-sitter-swift: true
   tree-sitter-typescript: true
-  unrs-resolver: set this to true or false
+  unrs-resolver: true

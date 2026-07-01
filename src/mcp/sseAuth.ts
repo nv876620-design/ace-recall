@@ -35,15 +35,8 @@ export function extractBearerToken(req: Request): string | null {
  * Middleware to authenticate MCP requests
  */
 export function authenticateMCP(req: Request, res: Response, next: NextFunction): void {
-  // Skip auth for dashboard, health checks, and admin routes
-  // (the dashboard has its own cookie-based session auth)
-  if (
-    req.path === '/' ||
-    req.path === '/health' ||
-    req.path.startsWith('/admin') ||
-    req.path === '/get-models' ||
-    req.path === '/augment/get-models'
-  ) {
+  // Skip auth for routes that are not under /mcp
+  if (!req.path.startsWith('/mcp')) {
     next();
     return;
   }
