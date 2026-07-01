@@ -27,6 +27,8 @@ Install the CLI tool globally:
 npm install -g @nv876620-design/ace-recall
 ```
 
+> **🌍 Cross-Platform Support**: Automatically works on Windows, macOS (Intel/Apple Silicon), and Linux (x64/arm64). Native dependencies are downloaded automatically during installation. See [Installation Guide](docs/INSTALLATION.md) for troubleshooting.
+
 ### 2. Initialization
 Setup the environment configuration file:
 ```bash

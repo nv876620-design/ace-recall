@@ -1,6 +1,6 @@
 {
-  "name": "@alistar.max/ace-lang-ruby",
-  "version": "0.1.6",
+  "name": "@nv876620-design/ace-lang-ruby",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nv876620-design/ace-recall.git"

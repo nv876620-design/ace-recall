@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g., 0.1.5) (must have tag v0.1.5)'
+        description: 'Version to publish (e.g., 0.2.0) (must have tag v0.2.0)'
         required: true
         type: string
 
@@ -16,6 +16,8 @@ permissions:
   id-token: write
 
 jobs:
+  # Native dependencies (better-sqlite3, lancedb, tree-sitter) đều có prebuilt binaries
+  # Chỉ cần publish từ một platform, npm sẽ tự động tải đúng binary khi install
   build-and-publish:
     name: Build and Publish
     runs-on: ubuntu-latest
@@ -78,18 +80,18 @@ jobs:
           const fs = require('fs');
           const ver = process.env.VER;
           const files = [
-            ['@alistar.max/ace', 'package.json'],
-            ['@alistar.max/ace-lang-typescript', 'packages/lang-typescript/package.json'],
-            ['@alistar.max/ace-lang-kotlin', 'packages/lang-kotlin/package.json'],
-            ['@alistar.max/ace-lang-csharp', 'packages/lang-csharp/package.json'],
-            ['@alistar.max/ace-lang-cpp', 'packages/lang-cpp/package.json'],
-            ['@alistar.max/ace-lang-java', 'packages/lang-java/package.json'],
-            ['@alistar.max/ace-lang-ruby', 'packages/lang-ruby/package.json'],
-            ['@alistar.max/ace-lang-c', 'packages/lang-c/package.json'],
-            ['@alistar.max/ace-lang-php', 'packages/lang-php/package.json'],
-            ['@alistar.max/ace-lang-rust', 'packages/lang-rust/package.json'],
-            ['@alistar.max/ace-lang-swift', 'packages/lang-swift/package.json'],
-            ['@alistar.max/ace-lang-all', 'packages/lang-all/package.json'],
+            ['@nv876620-design/ace-recall', 'package.json'],
+            ['@nv876620-design/ace-lang-typescript', 'packages/lang-typescript/package.json'],
+            ['@nv876620-design/ace-lang-kotlin', 'packages/lang-kotlin/package.json'],
+            ['@nv876620-design/ace-lang-csharp', 'packages/lang-csharp/package.json'],
+            ['@nv876620-design/ace-lang-cpp', 'packages/lang-cpp/package.json'],
+            ['@nv876620-design/ace-lang-java', 'packages/lang-java/package.json'],
+            ['@nv876620-design/ace-lang-ruby', 'packages/lang-ruby/package.json'],
+            ['@nv876620-design/ace-lang-c', 'packages/lang-c/package.json'],
+            ['@nv876620-design/ace-lang-php', 'packages/lang-php/package.json'],
+            ['@nv876620-design/ace-lang-rust', 'packages/lang-rust/package.json'],
+            ['@nv876620-design/ace-lang-swift', 'packages/lang-swift/package.json'],
+            ['@nv876620-design/ace-lang-all', 'packages/lang-all/package.json'],
           ];
           let ok = true;
           for (const [name, file] of files) {
@@ -110,18 +112,18 @@ jobs:
           VER="${{ steps.rel.outputs.ver }}"
 
           PACKAGE_NAMES=(
-            "@alistar.max/ace-lang-typescript"
-            "@alistar.max/ace-lang-kotlin"
-            "@alistar.max/ace-lang-csharp"
-            "@alistar.max/ace-lang-cpp"
-            "@alistar.max/ace-lang-java"
-            "@alistar.max/ace-lang-ruby"
-            "@alistar.max/ace-lang-c"
-            "@alistar.max/ace-lang-php"
-            "@alistar.max/ace-lang-rust"
-            "@alistar.max/ace-lang-swift"
-            "@alistar.max/ace-lang-all"
-            "@alistar.max/ace"
+            "@nv876620-design/ace-lang-typescript"
+            "@nv876620-design/ace-lang-kotlin"
+            "@nv876620-design/ace-lang-csharp"
+            "@nv876620-design/ace-lang-cpp"
+            "@nv876620-design/ace-lang-java"
+            "@nv876620-design/ace-lang-ruby"
+            "@nv876620-design/ace-lang-c"
+            "@nv876620-design/ace-lang-php"
+            "@nv876620-design/ace-lang-rust"
+            "@nv876620-design/ace-lang-swift"
+            "@nv876620-design/ace-lang-all"
+            "@nv876620-design/ace-recall"
           )
 
           echo "Preflight: verify npm publish identity"
@@ -156,19 +158,19 @@ jobs:
             fi
           }
 
-          publish_if_needed "@alistar.max/ace-lang-typescript" "packages/lang-typescript"
-          publish_if_needed "@alistar.max/ace-lang-kotlin" "packages/lang-kotlin"
-          publish_if_needed "@alistar.max/ace-lang-csharp" "packages/lang-csharp"
-          publish_if_needed "@alistar.max/ace-lang-cpp" "packages/lang-cpp"
-          publish_if_needed "@alistar.max/ace-lang-java" "packages/lang-java"
-          publish_if_needed "@alistar.max/ace-lang-ruby" "packages/lang-ruby"
-          publish_if_needed "@alistar.max/ace-lang-c" "packages/lang-c"
-          publish_if_needed "@alistar.max/ace-lang-php" "packages/lang-php"
-          publish_if_needed "@alistar.max/ace-lang-rust" "packages/lang-rust"
-          publish_if_needed "@alistar.max/ace-lang-swift" "packages/lang-swift"
-          publish_if_needed "@alistar.max/ace-lang-all" "packages/lang-all"
+          publish_if_needed "@nv876620-design/ace-lang-typescript" "packages/lang-typescript"
+          publish_if_needed "@nv876620-design/ace-lang-kotlin" "packages/lang-kotlin"
+          publish_if_needed "@nv876620-design/ace-lang-csharp" "packages/lang-csharp"
+          publish_if_needed "@nv876620-design/ace-lang-cpp" "packages/lang-cpp"
+          publish_if_needed "@nv876620-design/ace-lang-java" "packages/lang-java"
+          publish_if_needed "@nv876620-design/ace-lang-ruby" "packages/lang-ruby"
+          publish_if_needed "@nv876620-design/ace-lang-c" "packages/lang-c"
+          publish_if_needed "@nv876620-design/ace-lang-php" "packages/lang-php"
+          publish_if_needed "@nv876620-design/ace-lang-rust" "packages/lang-rust"
+          publish_if_needed "@nv876620-design/ace-lang-swift" "packages/lang-swift"
+          publish_if_needed "@nv876620-design/ace-lang-all" "packages/lang-all"
 
-          publish_if_needed "@alistar.max/ace" "."
+          publish_if_needed "@nv876620-design/ace-recall" "."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -181,26 +183,41 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            ## 🚀 ACE ${{ steps.rel.outputs.tag }}
+            ## 🚀 ACE (Awesome Context Engineering) ${{ steps.rel.outputs.tag }}
 
             ### 版本亮点
             - 支持 Node.js 20 / 22（Node 要求：`>=20 <24`，推荐 Node 22 LTS）
             - 主包默认内置 JavaScript / Python / Go 的 AST 分片能力
             - TypeScript / Kotlin / Java / Rust 提升为默认核心支持
             - C / C++ / C# / PHP / Ruby / Swift 继续通过按需插件增强
+            - 🌍 跨平台支持：Windows / macOS / Linux (x64 / arm64)
+            - 📦 Native 依赖自动安装：better-sqlite3 / lancedb / tree-sitter
 
-            ### 安装主包
+            ### 全局安装
             ```bash
-            npm install -g @alistar.max/ace
-            # 或
-            pnpm add -g @alistar.max/ace
+            npm install -g @nv876620-design/ace-recall
+            # 或使用别名
+            npm install -g ace-recall
             ```
 
-            ### 按需安装（示例）
+            ### 验证安装
             ```bash
-            npm install -g @alistar.max/ace-lang-csharp
-            npm install -g @alistar.max/ace-lang-swift
+            ace --version
+            ace init
             ```
 
-            > `lang-ts21` / `lang-ts22` 历史兼容包已移除；请使用主包默认核心支持或对应单语言插件。
-            > 未安装插件时会自动回退到纯文本分片，不阻断索引流程。
+            ### 按需安装插件（示例）
+            ```bash
+            npm install -g @nv876620-design/ace-lang-csharp
+            npm install -g @nv876620-design/ace-lang-swift
+            npm install -g @nv876620-design/ace-lang-all  # 所有语言插件
+            ```
+
+            ### 跨平台说明
+            - **Windows**: 自动下载 Windows x64 prebuilt binaries
+            - **macOS**: 自动下载 macOS x64/arm64 prebuilt binaries
+            - **Linux**: 自动下载 Linux x64/arm64 prebuilt binaries
+            - Native 模块会在 `npm install` 时自动获取对应平台的预编译版本
+
+            > 注意：首次安装可能需要下载 native binaries，请确保网络连接正常。
+            > 如遇到安装问题，可尝试清除缓存：`npm cache clean --force`
