@@ -7,6 +7,7 @@ import { getDataBaseDir } from '../utils/paths.js';
 
 export class EmbeddingCache {
   private cacheDir: string;
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: used in constructor for path generation
   private model: string;
 
   constructor(model: string, customBaseDir?: string) {

@@ -1,7 +1,7 @@
-import Database from 'better-sqlite3';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
+import Database from 'better-sqlite3';
 
 // Get the user data directory from paths
 function getUsersDbPath(): string {
@@ -48,7 +48,7 @@ export function initUsersDb(): Database.Database {
 }
 
 export function generateApiToken(): string {
-  return 'ace_' + crypto.randomBytes(24).toString('hex');
+  return `ace_${crypto.randomBytes(24).toString('hex')}`;
 }
 
 export function getUserByEmail(db: Database.Database, email: string): User | undefined {
@@ -59,11 +59,7 @@ export function getUserByToken(db: Database.Database, token: string): User | und
   return db.prepare('SELECT * FROM users WHERE api_token = ?').get(token) as User | undefined;
 }
 
-export function createUser(
-  db: Database.Database, 
-  email: string, 
-  googleId: string
-): User {
+export function createUser(db: Database.Database, email: string, googleId: string): User {
   const id = crypto.randomUUID();
   const apiToken = generateApiToken();
   const createdAt = Date.now();
@@ -80,7 +76,7 @@ export function createUser(
     google_id: googleId,
     api_token: apiToken,
     config_settings: defaultSettings,
-    created_at: createdAt
+    created_at: createdAt,
   };
 }
 
