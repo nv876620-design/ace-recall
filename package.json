@@ -72,26 +72,5 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "tree-sitter",
-      "better-sqlite3",
-      "esbuild",
-      "tree-sitter-go",
-      "tree-sitter-javascript",
-      "tree-sitter-python",
-      "tree-sitter-c",
-      "tree-sitter-c-sharp",
-      "tree-sitter-cpp",
-      "tree-sitter-java",
-      "tree-sitter-kotlin",
-      "tree-sitter-php",
-      "tree-sitter-ruby",
-      "tree-sitter-rust",
-      "tree-sitter-swift",
-      "tree-sitter-typescript",
-      "tree-sitter-cli"
-    ]
   }
 }
