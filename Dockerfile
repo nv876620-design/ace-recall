@@ -28,7 +28,8 @@ RUN pnpm install --frozen-lockfile --config.node-linker=hoisted --config.ignore-
 COPY . .
 
 # Build the project (compiles TypeScript to JavaScript in dist/)
-RUN pnpm run build
+# Disable deps status check to avoid unrs-resolver verification error
+RUN pnpm run build --config.ignore-dep-scripts=true
 
 # Runtime stage
 FROM node:22-bookworm-slim
