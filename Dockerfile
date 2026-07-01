@@ -19,7 +19,10 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY scripts ./scripts
 
 # Install dependencies using hoisted node-linker so node_modules is self-contained (no symlinks)
-RUN pnpm install --frozen-lockfile --config.node-linker=hoisted
+# Ignore unrs-resolver build script (not critical for ACE functionality)
+RUN pnpm install --frozen-lockfile --config.node-linker=hoisted --config.ignore-scripts=true || \
+    (pnpm install --frozen-lockfile --config.node-linker=hoisted --ignore-scripts && \
+     pnpm rebuild tree-sitter better-sqlite3 esbuild tree-sitter-cli tree-sitter-go tree-sitter-javascript tree-sitter-python tree-sitter-c tree-sitter-c-sharp tree-sitter-cpp tree-sitter-java tree-sitter-kotlin tree-sitter-php tree-sitter-ruby tree-sitter-rust tree-sitter-swift tree-sitter-typescript sharp)
 
 # Copy source code
 COPY . .
