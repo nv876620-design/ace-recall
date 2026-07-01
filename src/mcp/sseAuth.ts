@@ -10,6 +10,16 @@ import { getUserByToken, initUsersDb } from '../db/users.js';
 import { logger } from '../utils/logger.js';
 
 /**
+ * Extended Request interface with auth property
+ */
+export interface AuthenticatedRequest extends Request {
+  auth?: {
+    userId: string;
+    tokenId: string;
+  };
+}
+
+/**
  * Extract bearer token from Authorization header or query param
  */
 export function extractBearerToken(req: Request): string | null {
@@ -70,7 +80,7 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
   }
 
   if (isValidUserToken && userIdFromDb) {
-    (req as any).auth = {
+    (req as AuthenticatedRequest).auth = {
       userId: userIdFromDb,
       tokenId: token,
     };
@@ -90,7 +100,7 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
   }
 
   // Attach user info to request
-  (req as any).auth = {
+  (req as AuthenticatedRequest).auth = {
     userId: verification.userId,
     tokenId: verification.tokenId,
   };
@@ -102,7 +112,7 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
  * Middleware to require authentication (throws if not authenticated)
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const auth = (req as any).auth;
+  const auth = (req as AuthenticatedRequest).auth;
 
   if (!auth || !auth.userId) {
     logger.warn({ path: req.path }, 'Unauthenticated request to protected endpoint');
@@ -120,7 +130,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
  * Get authenticated user from request
  */
 export function getAuthUser(req: Request): { userId: string; tokenId: string } | null {
-  const auth = (req as any).auth;
+  const auth = (req as AuthenticatedRequest).auth;
 
   if (!auth || !auth.userId) {
     return null;

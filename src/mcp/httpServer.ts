@@ -2325,7 +2325,10 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
         escapeHtml(maskApiKeys(process.env.GOOGLE_CLIENT_SECRET || '')),
       )
       .replace(/\{\{workspacePath\}\}/g, escapeHtml(workspacePath))
-      .replace(/\{\{entryFilePathJson\}\}/g, escapeHtml(path.join(workspacePath, 'dist', 'index.js').replace(/\\/g, '\\\\')))
+      .replace(
+        /\{\{entryFilePathJson\}\}/g,
+        escapeHtml(path.join(workspacePath, 'dist', 'index.js').replace(/\\/g, '\\\\')),
+      )
       .replace(/\{\{envFilePath\}\}/g, escapeHtml(envFilePath));
 
     res.send(html);

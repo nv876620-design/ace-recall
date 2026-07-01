@@ -662,7 +662,11 @@ export class EmbeddingClient {
       return [];
     }
 
-    const cache = new EmbeddingCache(this.config.model, (this.config as any).cacheBaseDir);
+    const cacheBaseDir =
+      'cacheBaseDir' in this.config
+        ? (this.config as { cacheBaseDir?: string }).cacheBaseDir
+        : undefined;
+    const cache = new EmbeddingCache(this.config.model, cacheBaseDir);
     const { hits, misses } = await cache.getMany(texts);
 
     const hitRate = ((hits.size / texts.length) * 100).toFixed(1);
@@ -674,9 +678,13 @@ export class EmbeddingClient {
     if (misses.length === 0) {
       const results: EmbeddingResult[] = [];
       for (let i = 0; i < texts.length; i++) {
+        const embedding = hits.get(i);
+        if (!embedding) {
+          throw new Error(`Missing embedding for text at index ${i}`);
+        }
         results.push({
           text: texts[i],
-          embedding: hits.get(i)!,
+          embedding,
           index: i,
         });
       }

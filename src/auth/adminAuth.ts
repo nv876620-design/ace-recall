@@ -5,6 +5,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import type { NextFunction, Request, Response } from 'express';
 
 export interface AdminAuthConfig {
   /** Admin password (plain text or hashed) */
@@ -53,10 +54,10 @@ export function createAdminAuthMiddleware() {
 
   if (!config.enabled) {
     // No authentication required
-    return (_req: any, _res: any, next: any) => next();
+    return (_req: Request, _res: Response, next: NextFunction) => next();
   }
 
-  return (req: any, res: any, next: any) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     // Skip auth for health check and public endpoints
     if (req.path === '/health' || req.path === '/api/health') {
       return next();
@@ -65,19 +66,19 @@ export function createAdminAuthMiddleware() {
     // Check for Authorization header (Basic Auth)
     const authHeader = req.headers.authorization;
 
-    if (authHeader?.startsWith('Basic ')) {
+    if (authHeader?.startsWith('Basic ') && config.password) {
       const base64Credentials = authHeader.split(' ')[1];
       const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
       const [username, password] = credentials.split(':');
 
-      if (username === 'admin' && verifyAdminPassword(password, config.password!)) {
+      if (username === 'admin' && verifyAdminPassword(password, config.password)) {
         return next();
       }
     }
 
     // Check for session-based auth (simple token in cookie)
     const sessionToken = req.cookies?.ace_session;
-    if (sessionToken && verifySessionToken(sessionToken, config.password!)) {
+    if (sessionToken && config.password && verifySessionToken(sessionToken, config.password)) {
       return next();
     }
 
