@@ -9,21 +9,26 @@ import { verifyToken } from '../auth/tokenManager.js';
 import { logger } from '../utils/logger.js';
 
 /**
- * Extract bearer token from Authorization header
+ * Extract bearer token from Authorization header or query param
  */
 export function extractBearerToken(req: Request): string | null {
+  // Try Authorization header first
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return null;
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      return parts[1];
+    }
   }
 
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return null;
+  // Fallback to query parameter (for clients that can't set headers)
+  const tokenParam = req.query.token as string | undefined;
+  if (tokenParam) {
+    return tokenParam;
   }
 
-  return parts[1];
+  return null;
 }
 
 /**
@@ -48,7 +53,7 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
   if (!token) {
     res.status(401).json({
       error: 'Unauthorized',
-      message: 'Missing or invalid Authorization header. Expected: Bearer <token>',
+      message: 'Missing or invalid token. Provide via: Authorization: Bearer <token> header OR ?token=<token> query parameter',
     });
     return;
   }
