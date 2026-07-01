@@ -36,6 +36,7 @@ test('search source_code_only + include_languages 组合不再互斥，取交集
           USERPROFILE: fakeHome,
           PATH: process.env.PATH ?? '',
           NODE_ENV: 'production',
+          ACE_TEST: 'true',
         },
       },
     );
@@ -72,6 +73,7 @@ test('search 配置缺失时返回非零退出码', { concurrency: false }, () =
           USERPROFILE: fakeHome,
           PATH: process.env.PATH ?? '',
           NODE_ENV: 'production',
+          ACE_TEST: 'true',
         },
       },
     );
@@ -112,6 +114,7 @@ test('search 在日志目录不可写时不应因 logger 崩溃', { concurrency:
           USERPROFILE: fakeHome,
           PATH: process.env.PATH ?? '',
           NODE_ENV: 'production',
+          ACE_TEST: 'true',
         },
       },
     );

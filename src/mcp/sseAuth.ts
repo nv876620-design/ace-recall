@@ -6,6 +6,7 @@
 
 import type { NextFunction, Request, Response } from 'express';
 import { verifyToken } from '../auth/tokenManager.js';
+import { getUserByToken, initUsersDb } from '../db/users.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -52,6 +53,32 @@ export function authenticateMCP(req: Request, res: Response, next: NextFunction)
     return;
   }
 
+  // First, check if the token is a user API token from Google OAuth
+  let isValidUserToken = false;
+  let userIdFromDb: string | undefined;
+
+  try {
+    const db = initUsersDb();
+    const user = getUserByToken(db, token);
+    if (user) {
+      isValidUserToken = true;
+      userIdFromDb = user.id;
+    }
+    db.close();
+  } catch (err) {
+    logger.error({ error: (err as Error).message }, 'Error checking user token in database');
+  }
+
+  if (isValidUserToken && userIdFromDb) {
+    (req as any).auth = {
+      userId: userIdFromDb,
+      tokenId: token,
+    };
+    next();
+    return;
+  }
+
+  // Fallback to legacy token manager for generated service tokens
   const verification = verifyToken(token);
 
   if (!verification.valid) {

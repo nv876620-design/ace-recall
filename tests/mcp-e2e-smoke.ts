@@ -139,7 +139,7 @@ async function runSearch(
   return new Promise((resolve, reject) => {
     const args = [
       'dist/index.js',
-      'search',
+      'search-context',
       '--repo-path',
       repoRoot,
       '--information-request',

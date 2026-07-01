@@ -87,6 +87,8 @@ Parses files into semantic abstract syntax tree nodes using **Tree-sitter** for 
 ACE features a premium dark-themed admin dashboard (Glassmorphism layout with smooth transitions) accessible at `http://127.0.0.1:9988`:
 
 - **🔒 Password Protection**: Secures dashboard operations with password authentication (defaults to `admin` if not set).
+- **🔑 Google OAuth 2.0 Integration**: Supports logging in with Google accounts for a secure, multi-user setup.
+- **🛡️ Token-based User Authentication**: Google-authenticated users can manage and regenerate their own persistent API Tokens (Bearer tokens) to authenticate MCP sessions.
 - **👁️ API Key Masking**: Automatically replaces active keys with masking characters (`*`) for security.
 - **📁 Directory Browser**: Browse and pick `Workspace Path` using a built-in visual folder browser.
 - **📈 System Monitoring**: Track server uptime, environment configurations, and active MCP status instantly.
@@ -99,9 +101,9 @@ ACE features a premium dark-themed admin dashboard (Glassmorphism layout with sm
 |---------|-------------|
 | `ace-recall init` | Creates the global `.env` file template under `~/.ace/.env` |
 | `ace-recall index [path]` | Scans and indexes the target codebase directory (use `-f` to force rebuild) |
-| `ace-recall search` | Performs interactive command-line searches on your indexed codebases |
+| `ace-recall search-context` | Performs interactive command-line searches on your indexed codebases |
 | `ace-recall tasks [path]` | Automatically discovers runnable tasks and commands in the workspace |
-| `ace-recall git-msg` | Generates a commit message using the current staged Git changes |
+| `ace-recall git-msg [path]` | Generates a commit message using the current staged Git changes |
 | `ace-recall mcp` | Starts the stdio-based MCP Server for IDE clients |
 | `ace-recall mcp-http` | Runs the HTTP Server including the Web UI and MCP SSE transport portal |
 | `ace-recall doctor [path]` | Checks consistency between FTS and Vector indices, with optional `--repair` |

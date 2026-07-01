@@ -10,16 +10,27 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import express, { type Express, type Request, type Response } from 'express';
+import session from 'express-session';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import {
   generateSessionToken,
   getAdminAuthConfig,
   verifyAdminPassword,
   verifySessionToken,
 } from '../auth/adminAuth.js';
+import { createUser, getUserByEmail, initUsersDb, regenerateUserToken } from '../db/users.js';
 import { logger } from '../utils/logger.js';
 import { sessionManager } from './sessionManager.js';
 import { authenticateMCP, getAuthUser, requireAuth } from './sseAuth.js';
-import { codebaseRetrievalSchema, handleCodebaseRetrieval } from './tools/index.js';
+import {
+  codebaseRetrievalSchema,
+  detectTasksSchema,
+  generateCommitMessageSchema,
+  handleCodebaseRetrieval,
+  handleDetectTasks,
+  handleGenerateCommitMessage,
+} from './tools/index.js';
 
 const SERVER_NAME = 'ace-recall';
 
@@ -75,6 +86,71 @@ Capabilities:
         },
       },
       required: ['repo_path', 'information_request'],
+    },
+  },
+  {
+    name: 'generate-commit-message',
+    description: `
+Generate an AI-powered commit message from staged git changes.
+
+This tool analyzes your staged changes and creates a well-formatted commit message following best practices.
+
+Use cases:
+- After staging changes with 'git add', generate a commit message
+- Save time writing meaningful commit messages
+- Ensure consistent commit message style across the project
+
+Styles:
+- conventional: feat(scope): description (Conventional Commits format)
+- simple: Clear, concise description
+- detailed: Extended message with explanation
+`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo_path: {
+          type: 'string',
+          description: 'Path to the git repository',
+        },
+        style: {
+          type: 'string',
+          enum: ['conventional', 'simple', 'detailed'],
+          description: 'Commit message style (default: conventional)',
+        },
+        include_body: {
+          type: 'boolean',
+          description: 'Include detailed body in commit message (default: true)',
+        },
+      },
+      required: ['repo_path'],
+    },
+  },
+  {
+    name: 'detect-tasks',
+    description: `
+Automatically detect runnable tasks in a project.
+
+This tool scans common project files and discovers available tasks/commands:
+- package.json (npm/pnpm/yarn scripts)
+- Makefile (make targets)
+- justfile (just recipes)
+- deno.json (deno tasks)
+- Cargo.toml (cargo commands)
+
+Use cases:
+- "What tasks can I run in this project?"
+- "How do I build/test this project?"
+- Discover available development commands
+`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo_path: {
+          type: 'string',
+          description: 'Path to the project root',
+        },
+      },
+      required: ['repo_path'],
     },
   },
 ];
@@ -134,6 +210,14 @@ function createMcpServer(): Server {
         case 'codebase-retrieval': {
           const parsed = codebaseRetrievalSchema.parse(args);
           return await handleCodebaseRetrieval(parsed, undefined, onProgress);
+        }
+        case 'generate-commit-message': {
+          const parsed = generateCommitMessageSchema.parse(args);
+          return await handleGenerateCommitMessage(parsed);
+        }
+        case 'detect-tasks': {
+          const parsed = detectTasksSchema.parse(args);
+          return await handleDetectTasks(parsed);
         }
         default:
           throw new Error(`Unknown tool: ${name}`);
@@ -483,6 +567,49 @@ const LOGIN_HTML_TEMPLATE = `<!DOCTYPE html>
     .btn:active {
       transform: translateY(1px);
     }
+    
+    .btn-google {
+      background: white;
+      color: #333;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+      text-decoration: none;
+    }
+
+    .btn-google:hover {
+      background: #f8f9fa;
+      transform: translateY(-1px);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 28px 0;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .divider:not(:empty)::before { margin-right: 15px; }
+    .divider:not(:empty)::after { margin-left: 15px; }
   </style>
 </head>
 <body>
@@ -499,8 +626,22 @@ const LOGIN_HTML_TEMPLATE = `<!DOCTYPE html>
       {{#if error}}
       <div class="alert alert-danger" id="login-error">
         <span>⚠️</span>
-        <span>Mật khẩu không chính xác, vui lòng thử lại!</span>
+        <span>Xác thực thất bại, vui lòng thử lại!</span>
       </div>
+      {{/if}}
+
+      {{#if googleConfigured}}
+      <a href="/auth/google" class="btn-google">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Đăng nhập với Google
+      </a>
+
+      <div class="divider">HOẶC DÙNG MẬT KHẨU</div>
       {{/if}}
       
       <form action="/admin/login" method="POST">
@@ -1238,6 +1379,24 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
         </div>
         
         <form action="/admin/configure" method="POST" id="config-form">
+          <div class="card-subtitle">🔑 User Identity</div>
+          
+          <div class="grid" style="margin-bottom: 24px;">
+            <div class="form-group">
+              <label>Logged in as</label>
+              <input type="text" readonly value="{{userEmail}}" style="background: rgba(255,255,255,0.02);" />
+            </div>
+            <div class="form-group">
+              <label>Your API Token (For MCP Client)</label>
+              <div class="input-wrapper with-action">
+                <input type="text" id="input-api-token" readonly value="{{apiToken}}" style="background: rgba(255,255,255,0.02);" />
+                <button type="button" class="btn-action" onclick="navigator.clipboard.writeText(document.getElementById('input-api-token').value).then(() => { this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 2000); })">Copy</button>
+              </div>
+              {{regenerateButton}}
+              {{adminTokenHtml}}
+            </div>
+          </div>
+
           <div class="card-subtitle">📂 Workspace Configuration</div>
           
           <div class="form-group">
@@ -1265,12 +1424,12 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
           
           <div class="grid">
             <div class="form-group">
-              <label for="input-embeddings-url">Embeddings Base URL</label>
+              <label for="input-embeddings-url">Embeddings Base URL <span style="font-size: 0.8em; color: var(--text-secondary);">(e.g. https://api.siliconflow.cn/v1)</span></label>
               <input type="text" id="input-embeddings-url" name="embeddings_base_url" value="{{embeddingsBaseUrl}}" placeholder="https://api.jina.ai/v1" />
             </div>
             
             <div class="form-group">
-              <label for="input-embeddings-model">Embeddings Model</label>
+              <label for="input-embeddings-model">Embeddings Model <span style="font-size: 0.8em; color: var(--text-secondary);">(e.g. BAAI/bge-m3)</span></label>
               <input type="text" id="input-embeddings-model" name="embeddings_model" value="{{embeddingsModel}}" placeholder="jina-embeddings-v3" />
             </div>
           </div>
@@ -1292,13 +1451,35 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
           
           <div class="grid">
             <div class="form-group">
-              <label for="input-rerank-url">Reranker Base URL</label>
+              <label for="input-rerank-url">Reranker Base URL <span style="font-size: 0.8em; color: var(--text-secondary);">(e.g. https://api.siliconflow.cn/v1)</span></label>
               <input type="text" id="input-rerank-url" name="rerank_base_url" value="{{rerankBaseUrl}}" placeholder="https://api.jina.ai/v1" />
             </div>
             
             <div class="form-group">
-              <label for="input-rerank-model">Reranker Model</label>
+              <label for="input-rerank-model">Reranker Model <span style="font-size: 0.8em; color: var(--text-secondary);">(e.g. BAAI/bge-reranker-v2-m3)</span></label>
               <input type="text" id="input-rerank-model" name="rerank_model" value="{{rerankModel}}" placeholder="jina-reranker-v2-base-multilingual" />
+            </div>
+          </div>
+
+          <div class="card-subtitle">🌐 Google OAuth Settings</div>
+
+          <div class="form-group">
+            <label for="input-google-client-id">Google Client ID</label>
+            <div class="input-wrapper">
+              <input type="text" id="input-google-client-id" name="google_client_id" value="{{googleClientId}}" placeholder="xxxxxx.apps.googleusercontent.com" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-google-client-secret">Google Client Secret</label>
+            <div class="input-wrapper">
+              <input type="password" id="input-google-client-secret" name="google_client_secret" value="{{googleClientSecret}}" placeholder="GOCSPX-xxxxxx" />
+              <button type="button" class="toggle-visibility" data-target="input-google-client-secret">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -1347,17 +1528,58 @@ const ADMIN_HTML_TEMPLATE = `<!DOCTYPE html>
         
         <div class="tab-content active" data-content="mcp">
           <div class="endpoint-item">
-            <div class="endpoint-label">📱 Claude Desktop</div>
+            <div class="endpoint-label">📱 Claude Desktop (Local Node STDIO)</div>
             <div class="code-container">
-              <div class="code-block" id="code-claude">{
+              <div class="code-block" id="code-claude-local">{
   "mcpServers": {
     "ace-recall": {
       "command": "node",
-      "args": ["{{workspacePath}}/dist/index.js", "mcp"]
+      "args": ["{{entryFilePathJson}}", "mcp"]
     }
   }
 }</div>
-              <button class="copy-btn" data-target="code-claude">Copy</button>
+              <button class="copy-btn" data-target="code-claude-local">Copy</button>
+            </div>
+          </div>
+
+          <div class="endpoint-item">
+            <div class="endpoint-label">📦 Claude Desktop (Local NPX STDIO)</div>
+            <div class="code-container">
+              <div class="code-block" id="code-claude-local-npx">{
+  "mcpServers": {
+    "ace-recall-npx": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@nv876620-design/ace-recall",
+        "mcp"
+      ]
+    }
+  }
+}</div>
+              <button class="copy-btn" data-target="code-claude-local-npx">Copy</button>
+            </div>
+          </div>
+
+          <div class="endpoint-item">
+            <div class="endpoint-label">🌐 Claude Desktop (Remote NPX - via ace-tool-rs client)</div>
+            <div class="code-container">
+              <div class="code-block" id="code-claude-npx">{
+  "mcpServers": {
+    "ace-tool-npx": {
+      "command": "npx",
+      "args": [
+        "ace-tool-rs",
+        "--base-url",
+        "http://127.0.0.1:{{PORT}}",
+        "--token",
+        "{{apiToken}}"
+      ],
+      "env": {}
+    }
+  }
+}</div>
+              <button class="copy-btn" data-target="code-claude-npx">Copy</button>
             </div>
           </div>
           
@@ -1773,6 +1995,111 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  // Setup session
+  app.use(
+    session({
+      secret: process.env.ACE_ADMIN_PASSWORD || 'ace-secret-fallback',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { maxAge: 24 * 60 * 60 * 1000 },
+    }),
+  );
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser((id: string, done) => {
+    try {
+      const db = initUsersDb();
+      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+      db.close();
+      done(null, user || null);
+    } catch (err) {
+      done(err, null);
+    }
+  });
+
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(
+      new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: '/auth/google/callback',
+        },
+        (_accessToken, _refreshToken, profile, done) => {
+          try {
+            const email = profile.emails?.[0]?.value;
+            if (!email) {
+              return done(new Error('No email found from Google'), undefined);
+            }
+            const db = initUsersDb();
+            let user = getUserByEmail(db, email);
+            if (!user) {
+              user = createUser(db, email, profile.id);
+            }
+            db.close();
+            return done(null, user);
+          } catch (err) {
+            return done(err, undefined);
+          }
+        },
+      ),
+    );
+  }
+
+  // Auth Routes
+  app.get('/auth/google', (req, res, next) => {
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+    } else {
+      res
+        .status(503)
+        .send('Google OAuth is not configured. Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET.');
+    }
+  });
+
+  app.get(
+    '/auth/google/callback',
+    (req, res, next) => {
+      if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        passport.authenticate('google', { failureRedirect: '/?error=1' })(req, res, next);
+      } else {
+        res.redirect('/?error=1');
+      }
+    },
+    (req, res) => {
+      res.redirect('/');
+    },
+  );
+
+  app.post('/auth/logout', (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.redirect('/');
+    });
+  });
+
+  app.post('/auth/token/regenerate', (req, res) => {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).send('Unauthorized');
+    }
+    const user = req.user as any;
+    try {
+      const db = initUsersDb();
+      regenerateUserToken(db, user.id);
+      db.close();
+      res.redirect('/?success=true');
+    } catch (err) {
+      logger.error({ error: (err as Error).message }, 'Error regenerating token');
+      res.redirect('/?error=1');
+    }
+  });
+
   // Apply MCP authentication middleware (skip for admin/health endpoints)
   app.use(authenticateMCP);
 
@@ -1850,14 +2177,17 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
   });
 
   // Admin dashboard (GET /)
-  app.get('/', (req: Request, res: Response) => {
+  app.get('/', async (req: Request, res: Response) => {
     const success = req.query.success === 'true';
     const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
     const envFilePath = getActiveEnvFilePath();
 
     const config = getAdminAuthConfig();
     const sessionToken = (req as any).cookies?.ace_session;
-    const isAuthenticated = sessionToken && verifySessionToken(sessionToken, config.password!);
+    const isPasswordAuthenticated =
+      sessionToken && verifySessionToken(sessionToken, config.password!);
+    const isGoogleAuthenticated = req.isAuthenticated ? req.isAuthenticated() : false;
+    const isAuthenticated = isPasswordAuthenticated || isGoogleAuthenticated;
 
     if (!isAuthenticated) {
       const error = req.query.error === '1';
@@ -1867,8 +2197,38 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
       } else {
         loginHtml = loginHtml.replace(/\{\{#if error\}\}[\s\S]*?\{\{\/if\}\}/, '');
       }
+      if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        loginHtml = loginHtml.replace('{{#if googleConfigured}}', '').replace('{{/if}}', '');
+      } else {
+        loginHtml = loginHtml.replace(/\{\{#if googleConfigured\}\}[\s\S]*?\{\{\/if\}\}/, '');
+      }
+
       return res.send(loginHtml);
     }
+
+    const user = req.user as any;
+    let apiToken = user?.api_token;
+    const userEmail = user?.email || 'Admin User';
+
+    // Fetch latest admin token if not Google authenticated
+    if (!apiToken) {
+      try {
+        const { listTokens } = await import('../auth/tokenManager.js');
+        const adminTokens = listTokens('admin');
+        if (adminTokens.length > 0) {
+          // Tokens are sorted by created_at DESC, so the first one is the newest
+          apiToken = '*** (Token exists, click Generate to get a new one)';
+        } else {
+          apiToken = 'N/A (No token generated yet)';
+        }
+      } catch (err) {
+        apiToken = 'N/A (Logged in via Admin Password)';
+      }
+    }
+
+    const regenerateHtml = isGoogleAuthenticated
+      ? '<form action="/auth/token/regenerate" method="POST" style="position: absolute; right: 0; top: -28px;"><button type="submit" style="background: none; border: none; color: var(--warning); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Regenerate Token</button></form>'
+      : '';
 
     const hasEmbeddingKey = !!process.env.EMBEDDINGS_API_KEYS;
     const hasRerankKey = !!process.env.RERANK_API_KEYS;
@@ -1908,8 +2268,48 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
       );
     }
 
+    let adminTokenHtml = '';
+    if (!isGoogleAuthenticated) {
+      adminTokenHtml = `
+      <div style="margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Manage Admin Token:</div>
+        <button type="button" class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="generateAdminToken()">Generate New Token</button>
+        <button type="button" class="btn" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--danger); margin-left: 8px;" onclick="revokeTokens()">Revoke Tokens</button>
+        <div id="new-admin-token" style="margin-top: 8px; color: var(--success); font-weight: bold;"></div>
+      </div>
+      <script>
+        async function generateAdminToken() {
+          const res = await fetch('/admin/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: 'admin' }) });
+          if (res.ok) {
+            const data = await res.json();
+            document.getElementById('new-admin-token').innerText = 'New Token: ' + data.token + ' (Copy now!)';
+            document.getElementById('input-api-token').value = data.token;
+          } else {
+            alert('Error generating token');
+          }
+        }
+        async function revokeTokens() {
+          if (confirm('Are you sure you want to revoke all admin tokens?')) {
+            const res = await fetch('/admin/tokens?userId=admin');
+            if (res.ok) {
+              const data = await res.json();
+              for (const t of data.tokens) {
+                await fetch('/admin/tokens/' + t.id, { method: 'DELETE' });
+              }
+              alert('Tokens revoked');
+              document.getElementById('input-api-token').value = 'N/A';
+            }
+          }
+        }
+      </script>`;
+    }
+
     // Replace escaped config values
     html = html
+      .replace(/\{\{userEmail\}\}/g, escapeHtml(userEmail))
+      .replace(/\{\{apiToken\}\}/g, escapeHtml(apiToken))
+      .replace('{{regenerateButton}}', regenerateHtml)
+      .replace('{{adminTokenHtml}}', adminTokenHtml)
       .replace(
         /\{\{embeddingsApiKeys\}\}/g,
         escapeHtml(maskApiKeys(process.env.EMBEDDINGS_API_KEYS || '')),
@@ -1919,7 +2319,13 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
       .replace(/\{\{rerankApiKeys\}\}/g, escapeHtml(maskApiKeys(process.env.RERANK_API_KEYS || '')))
       .replace(/\{\{rerankBaseUrl\}\}/g, escapeHtml(process.env.RERANK_BASE_URL || ''))
       .replace(/\{\{rerankModel\}\}/g, escapeHtml(process.env.RERANK_MODEL || ''))
+      .replace(/\{\{googleClientId\}\}/g, escapeHtml(process.env.GOOGLE_CLIENT_ID || ''))
+      .replace(
+        /\{\{googleClientSecret\}\}/g,
+        escapeHtml(maskApiKeys(process.env.GOOGLE_CLIENT_SECRET || '')),
+      )
       .replace(/\{\{workspacePath\}\}/g, escapeHtml(workspacePath))
+      .replace(/\{\{entryFilePathJson\}\}/g, escapeHtml(path.join(workspacePath, 'dist', 'index.js').replace(/\\/g, '\\\\')))
       .replace(/\{\{envFilePath\}\}/g, escapeHtml(envFilePath));
 
     res.send(html);
@@ -1966,6 +2372,8 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
       rerank_api_keys,
       rerank_base_url,
       rerank_model,
+      google_client_id,
+      google_client_secret,
       admin_password,
     } = req.body;
 
@@ -1978,23 +2386,58 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
     if (embeddings_api_keys !== undefined && !embeddings_api_keys.includes('*')) {
       updates.EMBEDDINGS_API_KEYS = embeddings_api_keys;
     }
-    if (embeddings_base_url) updates.EMBEDDINGS_BASE_URL = embeddings_base_url;
-    if (embeddings_model) updates.EMBEDDINGS_MODEL = embeddings_model;
+    if (embeddings_base_url !== undefined) updates.EMBEDDINGS_BASE_URL = embeddings_base_url;
+    if (embeddings_model !== undefined) updates.EMBEDDINGS_MODEL = embeddings_model;
 
     if (rerank_api_keys !== undefined && !rerank_api_keys.includes('*')) {
       updates.RERANK_API_KEYS = rerank_api_keys;
     }
-    if (rerank_base_url) updates.RERANK_BASE_URL = rerank_base_url;
-    if (rerank_model) updates.RERANK_MODEL = rerank_model;
+    if (rerank_base_url !== undefined) updates.RERANK_BASE_URL = rerank_base_url;
+    if (rerank_model !== undefined) updates.RERANK_MODEL = rerank_model;
 
     if (admin_password && admin_password.trim() !== '') {
       updates.ACE_ADMIN_PASSWORD = admin_password;
+    }
+
+    if (google_client_id !== undefined) updates.GOOGLE_CLIENT_ID = google_client_id;
+    if (google_client_secret !== undefined && !google_client_secret.includes('*')) {
+      updates.GOOGLE_CLIENT_SECRET = google_client_secret;
     }
 
     if (Object.keys(updates).length > 0) {
       updateEnvFile(updates);
       // Update current process env as well
       Object.assign(process.env, updates);
+
+      // Hot reload Google Strategy if it was added or updated
+      if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        passport.use(
+          new GoogleStrategy(
+            {
+              clientID: process.env.GOOGLE_CLIENT_ID,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+              callbackURL: '/auth/google/callback',
+            },
+            (_accessToken, _refreshToken, profile, done) => {
+              try {
+                const email = profile.emails?.[0]?.value;
+                if (!email) {
+                  return done(new Error('No email found from Google'), undefined);
+                }
+                const db = initUsersDb();
+                let user = getUserByEmail(db, email);
+                if (!user) {
+                  user = createUser(db, email, profile.id);
+                }
+                db.close();
+                return done(null, user);
+              } catch (err) {
+                return done(err, undefined);
+              }
+            },
+          ),
+        );
+      }
     }
 
     res.redirect('/?success=true');
@@ -2217,7 +2660,7 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
   /**
    * POST /mcp - MCP JSON-RPC endpoint (authenticated)
    */
-  app.all('/mcp', requireAuth, async (req: Request, res: Response) => {
+  app.post('/mcp', requireAuth, async (req: Request, res: Response) => {
     try {
       // Update session activity if sessionId provided
       const sessionId = req.headers['x-session-id'] as string;
@@ -2228,10 +2671,112 @@ export function createHttpServerApp(_host = '127.0.0.1'): Express {
         }
       }
 
-      await transport.handleRequest(req, res, req.body);
+      const rpcRequest = req.body;
+
+      // Validate JSON-RPC request
+      if (!rpcRequest || typeof rpcRequest !== 'object') {
+        return res.status(400).json({
+          jsonrpc: '2.0',
+          error: { code: -32600, message: 'Invalid Request' },
+          id: null,
+        });
+      }
+
+      const { method, params, id } = rpcRequest;
+
+      // Handle tools/list
+      if (method === 'tools/list') {
+        return res.json({
+          jsonrpc: '2.0',
+          result: { tools: TOOLS },
+          id,
+        });
+      }
+
+      // Handle tools/call
+      if (method === 'tools/call') {
+        const { name, arguments: args } = params || {};
+
+        if (!name) {
+          return res.status(400).json({
+            jsonrpc: '2.0',
+            error: { code: -32602, message: 'Invalid params: missing tool name' },
+            id,
+          });
+        }
+
+        try {
+          let result;
+
+          switch (name) {
+            case 'codebase-retrieval': {
+              const parsed = codebaseRetrievalSchema.parse(args);
+              result = await handleCodebaseRetrieval(parsed, undefined, undefined);
+              break;
+            }
+            case 'generate-commit-message': {
+              // TODO: implement when available
+              result = {
+                content: [{ type: 'text', text: 'Tool not yet implemented' }],
+                isError: true,
+              };
+              break;
+            }
+            case 'detect-tasks': {
+              // TODO: implement when available
+              result = {
+                content: [{ type: 'text', text: 'Tool not yet implemented' }],
+                isError: true,
+              };
+              break;
+            }
+            default:
+              return res.status(404).json({
+                jsonrpc: '2.0',
+                error: { code: -32602, message: `Unknown tool: ${name}` },
+                id,
+              });
+          }
+
+          return res.json({
+            jsonrpc: '2.0',
+            result,
+            id,
+          });
+        } catch (err) {
+          const error = err as { message?: string; stack?: string };
+          logger.error(
+            { error: error.message, stack: error.stack, tool: name },
+            'Tool call failed',
+          );
+
+          return res.json({
+            jsonrpc: '2.0',
+            result: {
+              content: [{ type: 'text', text: `Error: ${error.message}` }],
+              isError: true,
+            },
+            id,
+          });
+        }
+      }
+
+      // Method not found
+      return res.status(404).json({
+        jsonrpc: '2.0',
+        error: { code: -32601, message: `Method not found: ${method}` },
+        id,
+      });
     } catch (err) {
-      logger.error({ error: (err as Error).message }, 'Error handling MCP request');
-      res.status(500).json({ error: 'Internal Server Error' });
+      logger.error(
+        { error: (err as Error).message, stack: (err as Error).stack },
+        'Error handling MCP request',
+      );
+      return res.status(500).json({
+        jsonrpc: '2.0',
+        error: { code: -32000, message: 'Internal server error', data: (err as Error).message },
+        id: null,
+      });
     }
   });
 

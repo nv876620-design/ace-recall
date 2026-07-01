@@ -67,15 +67,23 @@ function loadEnv(): void {
   const preferredHomeEnvPath = getPreferredHomeEnvFilePath();
   const fallbackEnvPath = getDefaultEnvFilePath();
   // 可能的 .env 文件路径（按优先级排序）
+  // 注意：无论 dev/prod，都优先检查当前目录的 .env，
+  // 因为 Dashboard (httpServer) 的 updateEnvFile 会写入 cwd/.env。
+  const cwdEnvPath = path.join(process.cwd(), '.env');
+
+  // Test 模式下跳过当前目录的 .env，避免测试加载了开发环境真实的 key
+  const skipCwd = process.env.ACE_TEST === 'true' || process.env.NODE_ENV === 'test';
+
   const candidates = isDev
     ? [
-        path.join(process.cwd(), '.env'), // 1. 当前目录（开发用）
+        ...(skipCwd ? [] : [cwdEnvPath]), // 1. 当前目录（开发用 + Dashboard 写入目标）
         preferredHomeEnvPath, // 2. 用户配置目录（首选）
-        fallbackEnvPath, // 3. 受限环境回退目录
+        ...(skipCwd ? [] : [fallbackEnvPath]), // 3. 受限环境回退目录
       ]
     : [
-        preferredHomeEnvPath, // 生产环境优先用户真实 HOME 配置
-        fallbackEnvPath, // 受限环境回退目录
+        ...(skipCwd ? [] : [cwdEnvPath]), // 1. 当前目录（Dashboard 写入目标）
+        preferredHomeEnvPath, // 2. 生产环境用户 HOME 配置
+        ...(skipCwd ? [] : [fallbackEnvPath]), // 3. 受限环境回退目录
       ];
 
   // 找到第一个存在的文件
